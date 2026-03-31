@@ -1,0 +1,638 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Статистика активности</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <style>
+        :root {
+            --bg: #0b1220;
+            --panel: rgba(10, 20, 40, 0.9);
+            --panel-border: rgba(27, 108, 255, 0.3);
+            --text: #e2e8f0;
+            --muted: #94a3b8;
+            --accent: #33b7ff;
+            --accent-soft: rgba(51, 183, 255, 0.2);
+        }
+
+        * {
+            box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
+        }
+
+        body {
+            margin: 0;
+            background: radial-gradient(1000px 600px at 15% -10%, rgba(27,108,255,0.2) 0%, rgba(11,18,32,0) 60%),
+                        linear-gradient(135deg, #0b1220 0%, #0f172a 50%, #000814 120%);
+            color: var(--text);
+            min-height: 100vh;
+            padding: 32px 20px 40px;
+        }
+
+        .page {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .page-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 20px;
+            margin-bottom: 28px;
+        }
+
+        .page-header h1 {
+            margin: 0;
+            font-size: clamp(22px, 3vw, 32px);
+            color: #e6f1ff;
+        }
+
+        .page-header p {
+            margin: 6px 0 0;
+            color: var(--muted);
+            font-size: 14px;
+        }
+
+        .controls {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .controls-note {
+            color: var(--muted);
+            font-size: 12px;
+        }
+
+        .controls select,
+        .controls button {
+            background: rgba(10, 20, 40, 0.8);
+            border: 1px solid rgba(51, 183, 255, 0.4);
+            color: var(--text);
+            border-radius: 8px;
+            padding: 8px 12px;
+            font-size: 14px;
+            cursor: pointer;
+        }
+
+        .user-panel {
+            margin-bottom: 22px;
+            padding: 16px 18px 18px;
+            background: var(--panel);
+            border: 1px solid var(--panel-border);
+            border-radius: 16px;
+            box-shadow: 0 18px 40px rgba(0, 0, 0, 0.35);
+        }
+
+        .user-panel h2 {
+            margin: 0 0 12px;
+            font-size: 16px;
+            color: #cfe3ff;
+        }
+
+        .user-table {
+            display: grid;
+            gap: 8px;
+        }
+
+        .user-row {
+            display: grid;
+            grid-template-columns: 1fr auto auto;
+            gap: 12px;
+            padding: 8px 10px;
+            border-radius: 10px;
+            background: rgba(10, 20, 40, 0.5);
+            font-size: 13px;
+            color: var(--muted);
+        }
+
+        .user-row strong {
+            color: #e2e8f0;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+        }
+
+        .card {
+            background: var(--panel);
+            border: 1px solid var(--panel-border);
+            border-radius: 16px;
+            padding: 16px 18px 20px;
+            box-shadow: 0 18px 40px rgba(0, 0, 0, 0.35);
+            min-height: 260px;
+        }
+
+        .card.is-clickable {
+            cursor: pointer;
+            transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .card.is-clickable:hover {
+            transform: translateY(-2px);
+            border-color: rgba(51, 183, 255, 0.6);
+            box-shadow: 0 22px 44px rgba(0, 0, 0, 0.45);
+        }
+
+        .card h2 {
+            margin: 0 0 12px;
+            font-size: 16px;
+            color: #cfe3ff;
+        }
+
+        .note {
+            margin-top: 12px;
+            color: var(--muted);
+            font-size: 13px;
+        }
+
+        canvas {
+            width: 100% !important;
+            height: 200px !important;
+        }
+
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(8, 14, 28, 0.78);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            padding: 20px;
+        }
+
+        .modal-overlay.open {
+            display: flex;
+        }
+
+        .modal {
+            width: min(720px, 100%);
+            background: var(--panel);
+            border: 1px solid var(--panel-border);
+            border-radius: 18px;
+            box-shadow: 0 24px 60px rgba(0, 0, 0, 0.55);
+            padding: 20px 22px 24px;
+        }
+
+        .modal-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+
+        .modal-controls {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 12px;
+            color: var(--muted);
+        }
+
+        .modal-controls select {
+            background: rgba(10, 20, 40, 0.8);
+            border: 1px solid rgba(51, 183, 255, 0.4);
+            color: var(--text);
+            border-radius: 6px;
+            padding: 4px 8px;
+            font-size: 12px;
+        }
+
+        .modal-title {
+            margin: 0;
+            font-size: 18px;
+            color: #e6f1ff;
+        }
+
+        .modal-close {
+            border: 1px solid rgba(51, 183, 255, 0.4);
+            background: rgba(10, 20, 40, 0.8);
+            color: var(--text);
+            border-radius: 8px;
+            padding: 6px 10px;
+            cursor: pointer;
+        }
+
+        .detail-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .detail-item {
+            background: rgba(10, 20, 40, 0.6);
+            border: 1px solid rgba(51, 183, 255, 0.2);
+            border-radius: 12px;
+            padding: 10px 12px;
+        }
+
+        .detail-item span {
+            display: block;
+            font-size: 12px;
+            color: var(--muted);
+        }
+
+        .detail-item strong {
+            font-size: 18px;
+            color: #e2e8f0;
+        }
+
+        .detail-list {
+            display: grid;
+            gap: 6px;
+        }
+
+        .detail-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 6px 8px;
+            border-radius: 8px;
+            background: rgba(10, 20, 40, 0.5);
+            color: var(--muted);
+            font-size: 13px;
+        }
+
+        @media (max-width: 768px) {
+            .page-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="page">
+        <div class="page-header">
+            <div>
+                <h1>Статистика активности</h1>
+                <p>Данные строятся на основе activity.log</p>
+            </div>
+            <div class="controls">
+                <select id="terminal-select">
+                    <option value="all" selected>Все терминалы</option>
+                </select>
+                <select id="days-select">
+                    <option value="7">7 дней</option>
+                    <option value="14">14 дней</option>
+                    <option value="30" selected>30 дней</option>
+                    <option value="60">60 дней</option>
+                    <option value="90">90 дней</option>
+                </select>
+                <button id="refresh-btn">Обновить</button>
+                <span class="controls-note">Выберите период и нажмите обновить</span>
+            </div>
+        </div>
+
+        <div class="user-panel">
+            <h2>Активные пользователи</h2>
+            <div class="user-table" id="active-users-list">
+                <div class="note">Данные загружаются...</div>
+            </div>
+        </div>
+
+        <div class="grid">
+            <div class="card is-clickable" data-metric="visits">
+                <h2>Посещения / Сессии</h2>
+                <canvas id="visitsChart"></canvas>
+            </div>
+            <div class="card is-clickable" data-metric="auths">
+                <h2>Авторизации</h2>
+                <canvas id="authChart"></canvas>
+            </div>
+            <div class="card is-clickable" data-metric="registrations">
+                <h2>Регистрации</h2>
+                <canvas id="regChart"></canvas>
+            </div>
+            <div class="card is-clickable" data-metric="errors">
+                <h2>Ошибки (4xx/5xx)</h2>
+                <canvas id="errorChart"></canvas>
+            </div>
+            <div class="card is-clickable" data-metric="active_users">
+                <h2>Активные пользователи</h2>
+                <canvas id="activeChart"></canvas>
+            </div>
+            <div class="card is-clickable" data-metric="response_time_ms">
+                <h2>Время ответа</h2>
+                <canvas id="latencyChart"></canvas>
+                <div class="note" id="latencyNote">Нет данных о времени ответа в логах.</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="detail-modal" role="dialog" aria-modal="true">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 class="modal-title" id="detail-title">Детали</h3>
+                <div class="modal-controls" id="detail-controls">
+                    <span>Показать</span>
+                    <select id="detail-limit">
+                        <option value="10" selected>10</option>
+                        <option value="50">50</option>
+                        <option value="100">100</option>
+                        <option value="all">все</option>
+                    </select>
+                </div>
+                <button class="modal-close" id="detail-close">Закрыть</button>
+            </div>
+            <div id="detail-content"></div>
+        </div>
+    </div>
+
+    <script>
+        const charts = {};
+        let latestStats = null;
+
+        const metricLabels = {
+            visits: 'Посещения / Сессии',
+            auths: 'Авторизации',
+            registrations: 'Регистрации',
+            errors: 'Ошибки (4xx/5xx)',
+            active_users: 'Активные пользователи',
+            response_time_ms: 'Время ответа'
+        };
+
+        function createLineChart(ctx, label, data, color) {
+            if (charts[label]) {
+                charts[label].destroy();
+            }
+            charts[label] = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: data.labels,
+                    datasets: [{
+                        label,
+                        data: data.values,
+                        borderColor: color,
+                        backgroundColor: 'rgba(51,183,255,0.12)',
+                        tension: 0.35,
+                        fill: true,
+                        pointRadius: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            labels: { color: '#cbd5f5' }
+                        }
+                    },
+                    scales: {
+                        x: { ticks: { color: '#94a3b8' }, grid: { color: 'rgba(148,163,184,0.1)' } },
+                        y: { ticks: { color: '#94a3b8' }, grid: { color: 'rgba(148,163,184,0.1)' } }
+                    }
+                }
+            });
+        }
+
+        function createBarChart(ctx, label, data, color) {
+            if (charts[label]) {
+                charts[label].destroy();
+            }
+            charts[label] = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: data.labels,
+                    datasets: [{
+                        label,
+                        data: data.values,
+                        backgroundColor: color,
+                        borderRadius: 6
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            labels: { color: '#cbd5f5' }
+                        }
+                    },
+                    scales: {
+                        x: { ticks: { color: '#94a3b8' }, grid: { color: 'rgba(148,163,184,0.1)' } },
+                        y: { ticks: { color: '#94a3b8' }, grid: { color: 'rgba(148,163,184,0.1)' } }
+                    }
+                }
+            });
+        }
+
+        function updateTerminalSelect(terminals, selected) {
+            const select = document.getElementById('terminal-select');
+            const options = Array.isArray(terminals) ? terminals : [];
+            const available = new Set(options);
+            const nextValue = selected && (selected === 'all' || available.has(selected)) ? selected : 'all';
+
+            select.innerHTML = '<option value="all">Все терминалы</option>';
+            options.forEach((terminal) => {
+                const opt = document.createElement('option');
+                opt.value = terminal;
+                opt.textContent = terminal;
+                select.appendChild(opt);
+            });
+            select.value = nextValue;
+        }
+
+        async function loadStats() {
+            const days = document.getElementById('days-select').value;
+            const terminal = document.getElementById('terminal-select').value || 'all';
+            const response = await fetch(`/api/admin_stats?days=${days}&terminal=${encodeURIComponent(terminal)}`);
+            if (response.status === 401) {
+                window.location.href = '/admin/login?next=/admin/stats';
+                return;
+            }
+            if (!response.ok) {
+                return;
+            }
+            const data = await response.json();
+            latestStats = data;
+            const labels = data.dates;
+
+            updateTerminalSelect((data.meta && data.meta.terminals) || [], terminal);
+
+            createLineChart(document.getElementById('visitsChart'), 'Посещения', {
+                labels,
+                values: data.visits
+            }, '#38bdf8');
+
+            createLineChart(document.getElementById('authChart'), 'Авторизации', {
+                labels,
+                values: data.auths
+            }, '#60a5fa');
+
+            createLineChart(document.getElementById('regChart'), 'Регистрации', {
+                labels,
+                values: data.registrations
+            }, '#818cf8');
+
+            createLineChart(document.getElementById('errorChart'), 'Ошибки', {
+                labels,
+                values: data.errors
+            }, '#f87171');
+
+            createBarChart(document.getElementById('activeChart'), 'Активные пользователи', {
+                labels,
+                values: data.active_users
+            }, 'rgba(51,183,255,0.55)');
+
+            createLineChart(document.getElementById('latencyChart'), 'Время ответа (мс)', {
+                labels,
+                values: data.response_time_ms
+            }, '#fbbf24');
+
+            if (!data.response_time_available) {
+                document.getElementById('latencyNote').style.display = 'block';
+            } else {
+                document.getElementById('latencyNote').style.display = 'none';
+            }
+
+            renderActiveUsers(data.active_user_details || []);
+        }
+
+        function renderActiveUsers(users) {
+            const container = document.getElementById('active-users-list');
+            if (!users.length) {
+                container.innerHTML = '<div class="note">Нет данных за выбранный период.</div>';
+                return;
+            }
+            const rows = users.slice(0, 12).map((user) => {
+                const lastSeen = user.last_seen ? String(user.last_seen).replace('T', ' ') : '—';
+                return `
+                    <div class="user-row">
+                        <strong>user ${user.user_id}</strong>
+                        <span>события: ${formatNumber(user.count)}</span>
+                        <span>последний: ${lastSeen}</span>
+                    </div>
+                `;
+            }).join('');
+            container.innerHTML = rows;
+        }
+
+        function formatNumber(value) {
+            if (value === null || value === undefined) {
+                return '—';
+            }
+            const num = Number(value);
+            if (Number.isNaN(num)) {
+                return String(value);
+            }
+            return num.toLocaleString('ru-RU');
+        }
+
+        let currentMetricKey = null;
+
+        function buildDetails(metricKey) {
+            if (!latestStats) {
+                return '<div class="note">Данные еще не загружены.</div>';
+            }
+            if (metricKey === 'response_time_ms' && !latestStats.response_time_available) {
+                return '<div class="note">Нет данных о времени ответа в логах.</div>';
+            }
+
+            const values = Array.isArray(latestStats[metricKey]) ? latestStats[metricKey] : [];
+            const labels = latestStats.dates || [];
+            if (!values.length) {
+                return '<div class="note">Нет данных за выбранный период.</div>';
+            }
+
+            const numericValues = values.map((value) => Number(value) || 0);
+            const total = numericValues.reduce((sum, value) => sum + value, 0);
+            const avg = total / numericValues.length;
+            const max = Math.max(...numericValues);
+            const min = Math.min(...numericValues);
+            const last = numericValues[numericValues.length - 1];
+
+            const lastRows = labels.slice(-7).map((label, idx) => {
+                const value = numericValues[numericValues.length - 7 + idx];
+                return `<div class="detail-row"><span>${label}</span><strong>${formatNumber(value)}</strong></div>`;
+            }).join('');
+
+            const userListHtml = buildUserList(metricKey);
+
+            return `
+                <div class="detail-grid">
+                    <div class="detail-item"><span>Всего</span><strong>${formatNumber(total)}</strong></div>
+                    <div class="detail-item"><span>Среднее</span><strong>${formatNumber(avg.toFixed(1))}</strong></div>
+                    <div class="detail-item"><span>Максимум</span><strong>${formatNumber(max)}</strong></div>
+                    <div class="detail-item"><span>Минимум</span><strong>${formatNumber(min)}</strong></div>
+                    <div class="detail-item"><span>Последнее значение</span><strong>${formatNumber(last)}</strong></div>
+                </div>
+                ${userListHtml}
+                <div class="note">Последние 7 дней</div>
+                <div class="detail-list">
+                    ${lastRows}
+                </div>
+            `;
+        }
+
+        function buildUserList(metricKey) {
+            const allowed = ['visits', 'auths', 'registrations', 'active_users'];
+            if (!allowed.includes(metricKey)) {
+                return '';
+            }
+
+            const lists = (latestStats && latestStats.event_lists) ? latestStats.event_lists : {};
+            const events = Array.isArray(lists[metricKey]) ? lists[metricKey] : [];
+            if (!events.length) {
+                return '<div class="note">Нет событий по пользователям.</div>';
+            }
+
+            const limitValue = document.getElementById('detail-limit').value;
+            const limit = limitValue === 'all' ? events.length : Number(limitValue) || 10;
+            const rows = events.slice(0, limit).map((eventItem) => {
+                const name = eventItem.name || `user ${eventItem.user_id}`;
+                const timestamp = eventItem.timestamp ? String(eventItem.timestamp).replace('T', ' ') : '—';
+                return `<div class="detail-row"><span>${name} (${eventItem.user_id})</span><strong>${timestamp}</strong></div>`;
+            }).join('');
+
+            return `
+                <div class="note">Топ пользователей</div>
+                <div class="detail-list">
+                    ${rows}
+                </div>
+            `;
+        }
+
+        function openDetailModal(metricKey) {
+            currentMetricKey = metricKey;
+            const title = metricLabels[metricKey] || 'Детали';
+            document.getElementById('detail-title').textContent = title;
+            document.getElementById('detail-controls').style.display = ['visits', 'auths', 'registrations', 'active_users'].includes(metricKey) ? 'flex' : 'none';
+            document.getElementById('detail-content').innerHTML = buildDetails(metricKey);
+            document.getElementById('detail-modal').classList.add('open');
+        }
+
+        function closeDetailModal() {
+            document.getElementById('detail-modal').classList.remove('open');
+        }
+
+        document.getElementById('refresh-btn').addEventListener('click', loadStats);
+        document.getElementById('terminal-select').addEventListener('change', loadStats);
+        document.querySelectorAll('.card.is-clickable').forEach((card) => {
+            card.addEventListener('click', () => {
+                openDetailModal(card.dataset.metric);
+            });
+        });
+        document.getElementById('detail-close').addEventListener('click', closeDetailModal);
+        document.getElementById('detail-modal').addEventListener('click', (event) => {
+            if (event.target.id === 'detail-modal') {
+                closeDetailModal();
+            }
+        });
+        document.getElementById('detail-limit').addEventListener('change', () => {
+            if (currentMetricKey) {
+                document.getElementById('detail-content').innerHTML = buildDetails(currentMetricKey);
+            }
+        });
+
+        loadStats();
+    </script>
+</body>
+</html>

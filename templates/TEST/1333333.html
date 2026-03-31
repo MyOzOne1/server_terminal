@@ -1,0 +1,82 @@
+    // Переключение вкладок профиля
+    document.addEventListener('DOMContentLoaded', function() {
+        // Инициализация вкладок профиля
+        const profileTabs = document.querySelectorAll('.profile-tab');
+        const profileTabContents = document.querySelectorAll('.profile-tab-content');
+        
+        profileTabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                const targetTab = tab.getAttribute('data-tab');
+                
+                // Убираем активный класс у всех вкладок и контента
+                profileTabs.forEach(t => t.classList.remove('active'));
+                profileTabContents.forEach(content => content.classList.remove('active'));
+                
+                // Добавляем активный класс текущей вкладке и контенту
+                tab.classList.add('active');
+                document.getElementById(targetTab).classList.add('active');
+                
+                // Если активирована вкладка покупок, инициализируем её
+                if (targetTab === 'purchase') {
+                    initPurchaseTab();
+                }
+            });
+        });
+
+        // Загрузка информации об отпусках
+        loadVacationsInfo();
+
+        // Инициализация вкладки покупок при первом открытии
+        if (document.getElementById('purchase').classList.contains('active')) {
+            initPurchaseTab();
+        }
+        
+        // Инициализация текущей даты в селектах
+        //document.getElementById('year-select').value = currentYear;
+        //document.getElementById('month-select').value = currentMonth;
+        //document.getElementById('vacation-year-select').value = currentYear;
+        //document.getElementById('timesheet-year-select').value = currentYear;
+        //document.getElementById('timesheet-month-select').value = currentMonth;
+
+        // Обработчик кнопки обновления
+        const refreshButton = document.querySelector('.refresh-button');
+        if (refreshButton) {
+            refreshButton.addEventListener('click', function() {
+                const icon = this.querySelector('i');
+                
+                // Блокируем кнопку на время анимации
+                this.disabled = true;
+                icon.classList.add('rotating');
+                
+                // Обновляем страницу после завершения анимации
+                setTimeout(() => {
+                    icon.classList.remove('rotating');
+                    this.disabled = false;
+                    location.reload(true);
+                }, 500);
+            });
+        }
+
+        // Обработчик выхода
+        const logoutButton = document.getElementById('logoutButton');
+        if (logoutButton && !isWebClient()) {
+            logoutButton.href = "#";
+            logoutButton.addEventListener('click', function(e) {
+                e.preventDefault();
+                fetch('/logout?redirect=card')
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.redirect === 'login_by_card') {
+                            window.location.href = '/login_by_card';
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Logout error:', error);
+                        window.location.href = '/login_by_card';
+                    });
+            });
+        }
+
+        // Автоматическое обновление размеров при изменении размера окна
+        window.addEventListener('resize', updatePdfModalSizes);
+    });

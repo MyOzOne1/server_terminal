@@ -1,0 +1,616 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8" />
+<title>Приобретение продукции с вкладками</title>
+
+<style>
+    body {
+        background: linear-gradient(135deg, #1e90ff 0%, #ffffff 100%); 
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        background-color: #f8f9fa;
+        margin: 0;
+        padding: 20px;
+        color: #2c3e50;
+    }
+    .container {
+        max-width: 1200px;
+        margin: 0 auto;
+    }
+    header {
+        background-color: #105ba7;
+        color: white;
+        padding: 20px 30px;
+        border-radius: 8px 8px 0 0;
+        margin-bottom: 10px;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+    }
+    header h1 {
+        margin: 0;
+        font-size: 24px;
+        font-weight: 600;
+    }
+
+    /* Вкладки */
+    .tabs {
+        display: flex;
+        border-bottom: 2px solid #0e0f0f;
+        margin-bottom: 20px;
+        user-select: none;
+    }
+    .tab {
+        padding: 12px 25px;
+        cursor: pointer;
+        font-weight: 600;
+        color: #111213;
+        border: 2px solid transparent;
+        border-bottom: none;
+        border-radius: 8px 8px 0 0;
+        transition: background-color 0.3s, color 0.3s;
+    }
+    .tab:hover {
+        background-color: #ecf3fb;
+    }
+    .tab.active {
+        background-color: white;
+        border-color: #3498db;
+        color: #2c3e50;
+        font-weight: 700;
+        cursor: default;
+    }
+
+    /* Содержимое вкладок */
+    .tab-content {
+        background-color: white;
+        padding: 20px;
+        border-radius: 0 8px 8px 8px;
+        box-shadow: 0 0 10px rgba(0,0,0,0.05);
+        display: none;
+    }
+    .tab-content.active {
+        display: block;
+    }
+
+    /* Таблицы */
+    table {
+        width: 100%;
+        border-collapse: separate;
+        border-spacing: 0;
+        font-size: 14px;
+    }
+    thead tr {
+        background-color: #3498db;
+        color: white;
+        text-align: left;
+        user-select: none;
+    }
+    thead th {
+        padding: 12px 15px;
+        font-weight: 600;
+    }
+    tbody tr {
+        transition: background-color 0.2s ease;
+        cursor: default;
+    }
+    tbody tr:hover {
+        background-color: #f5f9fc;
+    }
+    tbody td {
+        padding: 12px 15px;
+        border-bottom: 1px solid #eee;
+        vertical-align: middle;
+    }
+
+    /* Сообщения */
+    .loading, .error, .empty {
+        text-align: center;
+        padding: 40px 0;
+        font-size: 16px;
+        color: #7f8c8d;
+    }
+    .error {
+        color: #f35a49;
+    }
+
+    /* Адаптив */
+    @media (max-width: 768px) {
+        thead {
+            display: none;
+        }
+        table, tbody, tr, td {
+            display: block;
+            width: 100%;
+        }
+        tr {
+            margin-bottom: 15px;
+            box-shadow: 0 0 8px rgba(0,0,0,0.1);
+            border-radius: 8px;
+            padding: 15px;
+            background: white;
+        }
+        td {
+            padding-left: 50%;
+            position: relative;
+            border-bottom: none;
+            text-align: right;
+        }
+        td::before {
+            content: attr(data-label);
+            position: absolute;
+            left: 15px;
+            width: 45%;
+            padding-left: 10px;
+            font-weight: 600;
+            text-align: left;
+            color: #34495e;
+        }
+    }
+
+    /* Кнопка оформления заказа */
+    .order-button {
+        background-color: #3498db;
+        color: white;
+        border: none;
+        padding: 12px 25px;
+        border-radius: 6px;
+        font-weight: 600;
+        font-size: 16px;
+        cursor: pointer;
+        transition: background-color 0.3s;
+        margin-top: 15px;
+    }
+    .order-button:disabled {
+        background-color: #95a5a6;
+        cursor: not-allowed;
+    }
+    .order-button:hover:not(:disabled) {
+        background-color: #2980b9;
+    }
+
+    /* Добавим стиль для сообщения о разлогине */
+    .logout-message {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        background-color: #e74c3c;
+        color: white;
+        padding: 15px;
+        text-align: center;
+        z-index: 1000;
+        display: none;
+    }
+
+    /* Стили для вкладки оформления заказа */
+    #tab-order #order-info p {
+        margin: 4px 0;
+        font-size: 16px;
+    }
+    #tab-order #order-info strong {
+        color: #487eb0;
+    }
+    #tab-order table {
+        margin-top: 15px;
+        border-collapse: collapse;
+    }
+    #tab-order table th, #tab-order table td {
+        border: 1px solid #ddd;
+        padding: 8px 12px;
+        text-align: left;
+    }
+    #tab-order table thead {
+        background-color: #487eb0;
+        color: white;
+    }
+    #tab-order #order-total {
+        margin-top: 10px;
+        font-weight: 700;
+        font-size: 18px;
+        color: #27ae60;
+    }
+    #tab-order label {
+        font-weight: 600;
+        margin-right: 10px;
+        display: inline-block;
+        margin-top: 20px;
+    }
+    #tab-order select {
+        padding: 8px 12px;
+        border: 2px solid #487eb0;
+        border-radius: 6px;
+        font-size: 14px;
+        color: #2d3436;
+        min-width: 280px;
+    }
+    #tab-order button {
+        margin-top: 20px;
+        padding: 10px 18px;
+        font-weight: 600;
+        border-radius: 6px;
+        border: none;
+        cursor: pointer;
+    }
+    #tab-order #confirm-order {
+        background-color: #487eb0;
+        color: white;
+        margin-right: 10px;
+    }
+    #tab-order #confirm-order:hover {
+        background-color: #3b6aa0;
+    }
+    #tab-order #cancel-order {
+        background-color: #dcdde1;
+        color: #2d3436;
+    }
+    #tab-order #cancel-order:hover {
+        background-color: #c1c7cd;
+    }
+    #tab-order #order-message {
+        margin-top: 15px;
+        font-weight: 600;
+    }
+</style>
+</head>
+
+<body>
+<div class="container">
+    <header>
+        <h1>Приобретение продукции</h1>
+    </header>
+
+    <nav class="tabs" role="tablist" aria-label="Вкладки продукции">
+        <div class="tab active" role="tab" aria-selected="true" tabindex="0" aria-controls="tab-new" id="tab-new-btn">Новая продукция</div>
+        <div class="tab" role="tab" aria-selected="false" tabindex="-1" aria-controls="tab-discount" id="tab-discount-btn">Уцененная продукция</div>
+        <div class="tab" role="tab" aria-selected="false" tabindex="-1" aria-controls="tab-order" id="tab-order-btn">Оформление заказа</div>
+    </nav>
+
+    <section id="tab-new" class="tab-content active" role="tabpanel" aria-labelledby="tab-new-btn">
+        <table aria-label="Новая продукция">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Товар</th>
+                    <th>Описание</th>
+                    <th>Дата поступления</th>
+                    <th>Количество</th>
+                    <th>Цена</th>
+                </tr>
+            </thead>
+            <tbody id="new-products-body">
+                <tr><td colspan="6" class="loading">Загрузка данных...</td></tr>
+            </tbody>
+        </table>
+    </section>
+
+    <section id="tab-discount" class="tab-content" role="tabpanel" aria-labelledby="tab-discount-btn">
+        <table aria-label="Уцененная продукция">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Товар</th>
+                    <th>Описание</th>
+                    <th>Дата уценки</th>
+                    <th>Количество</th>
+                    <th>Цена</th>
+                </tr>
+            </thead>
+            <tbody id="discount-products-body">
+                <tr><td colspan="6" class="loading">Загрузка данных...</td></tr>
+            </tbody>
+        </table>
+    </section>
+
+    <section id="tab-order" class="tab-content" role="tabpanel" aria-labelledby="tab-order-btn">
+        <h2>Оформление заказа</h2>
+
+        <div id="order-info">
+            <p><strong>Покупатель:</strong> <span id="user-fullname">Загрузка...</span></p>
+            <p><strong>Номер карты:</strong> <span id="user-card">Загрузка...</span></p>
+            <p><strong>Номер заказа:</strong> <span id="order-number" style="color:#e84118; font-weight:bold;">...</span></p>
+        </div>
+
+        <table aria-label="Товары для заказа">
+            <thead>
+                <tr>
+                    <th>Артикул</th>
+                    <th>Название</th>
+                    <th>Цена</th>
+                    <th>Количество</th>
+                    <th>Сумма</th>
+                </tr>
+            </thead>
+            <tbody id="order-tbody">
+                <tr><td colspan="5" class="empty">Пока нет выбранных товаров</td></tr>
+            </tbody>
+        </table>
+
+        <p id="order-total">Итого: 0.00 руб.</p>
+
+        <label for="payment-method">Способ оплаты:</label>
+        <select id="payment-method" aria-label="Выбор способа оплаты">
+            <option>За наличный расчет</option>
+            <option>По карте</option>
+            <option>В счет зарплаты</option>
+        </select>
+
+        <div>
+            <button id="confirm-order">Подтвердить и сохранить</button>
+            <button id="cancel-order">Отмена</button>
+        </div>
+
+        <div id="order-message" role="alert" aria-live="polite"></div>
+    </section>
+</div>
+
+<div class="logout-message" id="logout-message">
+        Сессия завершена. Перенаправление через <span id="logout-count">5</span> сек.
+</div>
+
+<script>
+    // Переключение вкладок
+    const tabs = document.querySelectorAll('.tab');
+    const tabContents = document.querySelectorAll('.tab-content');
+    
+    tabs.forEach(tab => {
+        tab.addEventListener('click', () => {
+            activateTab(tab.id);
+        });
+        tab.addEventListener('keydown', e => {
+            if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') {
+                e.preventDefault();
+                let idx = Array.from(tabs).indexOf(tab);
+                if (e.key === 'ArrowRight') idx = (idx + 1) % tabs.length;
+                else idx = (idx - 1 + tabs.length) % tabs.length;
+                activateTab(tabs[idx].id);
+                tabs[idx].focus();
+            }
+        });
+    });
+    
+    function activateTab(tabId) {
+        tabs.forEach(t => {
+            const selected = (t.id === tabId);
+            t.classList.toggle('active', selected);
+            t.setAttribute('aria-selected', selected);
+            t.tabIndex = selected ? 0 : -1;
+        });
+        tabContents.forEach(content => {
+            content.classList.toggle('active', content.id === tabId.replace('-btn',''));
+        });
+    }
+    
+    // Загрузка данных для вкладок
+    function loadData(url, tbodyId, emptyMessage = 'Нет данных') {
+        const tbody = document.getElementById(tbodyId);
+        tbody.innerHTML = '<tr><td colspan="6" class="loading">Загрузка данных...</td></tr>';
+        fetch(url)
+            .then(res => {
+                if (!res.ok) throw new Error('Ошибка загрузки данных');
+                return res.json();
+            })
+            .then(data => {
+                if (!data.length) {
+                    tbody.innerHTML = `<tr><td colspan="6" class="empty">${emptyMessage}</td></tr>`;
+                    return;
+                }
+                tbody.innerHTML = '';
+                data.forEach(item => {
+                    const tr = document.createElement('tr');
+                    const dateLabel = tbodyId === 'new-products-body' ? 'Дата поступления' : 'Дата уценки';
+                    const dateField = tbodyId === 'new-products-body' ? item.arrival_date : item.discount_date;
+                    tr.innerHTML = `
+                        <td data-label="ID">${item.id}</td>
+                        <td data-label="Товар">${item.product}</td>
+                        <td data-label="Описание">${item.description || ''}</td>
+                        <td data-label="${dateLabel}">${dateField}</td>
+                        <td data-label="Количество">${item.amount}</td>
+                        <td data-label="Цена">${item.price} руб.</td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+                // Обновим товары для заказа (для демонстрации возьмем первые 2 товара)
+                if (tbodyId === 'new-products-body') {
+                    updateOrderProducts(data.slice(0, 2)); // например, первые 2 товара
+                }
+            })
+            .catch(err => {
+                tbody.innerHTML = `<tr><td colspan="6" class="error">${err.message}</td></tr>`;
+            });
+    }
+    
+    // Инициализация загрузки данных для вкладок
+    loadData('/api/new_products', 'new-products-body', 'Новая продукция отсутствует');
+    loadData('/api/discount_products', 'discount-products-body', 'Уцененная продукция отсутствует');
+    
+    // Пример данных пользователя (замените на реальные данные с сервера)
+    const userInfo = {
+        full_name: "Иван Иванов",
+        card_number: "1234 5678 9012 3456"
+    };
+    
+    // Массив выбранных товаров для заказа: {id, product, price, amount}
+    let orderProducts = [];
+    
+    // Обновление таблицы товаров для заказа
+    function updateOrderProducts(products) {
+        orderProducts = products.map(p => ({
+            id: p.id,
+            product: p.product,
+            price: p.price,
+            amount: p.amount
+        }));
+        renderOrderTable();
+    }
+    
+    // Рендер таблицы в вкладке "Оформление заказа"
+    function renderOrderTable() {
+        const tbody = document.getElementById('order-tbody');
+        tbody.innerHTML = '';
+        if (orderProducts.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="5" class="empty">Пока нет выбранных товаров</td></tr>';
+            document.getElementById('order-total').textContent = 'Итого: 0.00 руб.';
+            document.getElementById('order-btn').disabled = true;
+            return;
+        }
+        let total = 0;
+        orderProducts.forEach(item => {
+            const sum = item.price * item.amount;
+            total += sum;
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td data-label="Артикул">${item.id}</td>
+                <td data-label="Название">${item.product}</td>
+                <td data-label="Цена">${item.price} руб.</td>
+                <td data-label="Количество">${item.amount}</td>
+                <td data-label="Сумма">${sum.toFixed(2)} руб.</td>
+            `;
+            tbody.appendChild(tr);
+        });
+        document.getElementById('order-total').textContent = `Итого: ${total.toFixed(2)} руб.`;
+        document.getElementById('order-btn').disabled = false;
+    }
+    
+    // Генерация номера заказа
+    function generateOrderNumber() {
+        const now = new Date();
+        const pad = (n) => n.toString().padStart(2, '0');
+        const dateStr = `${now.getFullYear()}${pad(now.getMonth()+1)}${pad(now.getDate())}${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}`;
+        const rand = Math.floor(1000 + Math.random() * 9000);
+        return `${dateStr}-${rand}`;
+    }
+    
+    // Инициализация вкладки "Оформление заказа"
+    function initOrderTab() {
+        document.getElementById('user-fullname').textContent = userInfo.full_name;
+        document.getElementById('user-card').textContent = userInfo.card_number;
+        const orderNumber = generateOrderNumber();
+        document.getElementById('order-number').textContent = orderNumber;
+        
+        // Обработчик кнопки подтверждения
+        document.getElementById('confirm-order').onclick = () => {
+            if (orderProducts.length === 0) {
+                alert('Нет выбранных товаров для оформления заказа.');
+                return;
+            }
+            const paymentMethod = document.getElementById('payment-method').value;
+            let total = 0;
+            orderProducts.forEach(item => total += item.price * item.amount);
+            
+            // Формируем HTML заказа для сохранения
+            let html = `
+                <!DOCTYPE html>
+                <html lang="ru">
+                <head>
+                    <meta charset="UTF-8" />
+                    <title>Заказ №${orderNumber}</title>
+                    <style>
+                        body { font-family: Arial, sans-serif; margin: 20px; }
+                        h1 { color: #2c3e50; }
+                        table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+                        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+                        th { background-color: #f2f2f2; }
+                        .total { font-size: 18px; font-weight: bold; color: #27ae60; }
+                        .user-info { margin-bottom: 20px; }
+                    </style>
+                </head>
+                <body>
+                    <h1>Заказ №${orderNumber}</h1>
+                    <div class="user-info">
+                        <p>Дата: ${new Date().toLocaleString('ru-RU')}</p>
+                        <p>Покупатель: ${userInfo.full_name}</p>
+                        <p>Номер карты: ${userInfo.card_number}</p>
+                        <p>Способ оплаты: ${paymentMethod}</p>
+                    </div>
+                    <table>
+                        <tr>
+                            <th>Артикул</th><th>Название</th><th>Цена</th><th>Количество</th><th>Сумма</th>
+                        </tr>
+            `;
+            orderProducts.forEach(item => {
+                const sum = item.price * item.amount;
+                html += `
+                    <tr>
+                        <td>${item.id}</td>
+                        <td>${item.product}</td>
+                        <td>${item.price} руб.</td>
+                        <td>${item.amount}</td>
+                        <td>${sum.toFixed(2)} руб.</td>
+                    </tr>
+                `;
+            });
+            html += `
+                    </table>
+                    <p class="total">Итого: ${total.toFixed(2)} руб.</p>
+                </body>
+                </html>
+            `;
+            
+            // Сохраняем файл
+            const blob = new Blob([html], {type: "text/html;charset=utf-8"});
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `Заказ_${orderNumber}.html`;
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            URL.revokeObjectURL(url);
+            
+            // Показываем сообщение
+            const msg = document.getElementById('order-message');
+            msg.style.color = '#27ae60';
+            msg.textContent = `Документ заказа сохранён как Заказ_${orderNumber}.html`;
+        };
+        
+        // Обработчик кнопки отмены
+        document.getElementById('cancel-order').onclick = () => {
+            // Очистка заказа
+            orderProducts = [];
+            renderOrderTable();
+            document.getElementById('order-message').textContent = '';
+            alert('Оформление заказа отменено.');
+        };
+    }
+    
+    // Инициализация при загрузке
+    window.addEventListener('DOMContentLoaded', () => {
+        initOrderTab();
+    });
+    
+    // Проверка статуса авторизации (ваш существующий код)
+    function checkAuthStatus() {
+        fetch('/api/auth_status')
+            .then(response => response.json())
+            .then(data => {
+                if (!data.authenticated) {
+                    showLogoutMessage();
+                }
+            });
+    }
+    
+    function showLogoutMessage() {
+        const message = document.getElementById('logout-message');
+        const countElement = document.getElementById('logout-count');
+        message.style.display = 'block';
+        
+        let seconds = 5;
+        countElement.textContent = seconds;
+        
+        const countdown = setInterval(() => {
+            seconds--;
+            countElement.textContent = seconds;
+            
+            if (seconds <= 0) {
+                clearInterval(countdown);
+                window.location.href = '/purchase_auth_required.html';
+            }
+        }, 1000);
+    }
+    
+    // Проверяем статус каждые 5 секунд
+    setInterval(checkAuthStatus, 5000);
+    checkAuthStatus();
+
+</script>
+</body>
+</html>

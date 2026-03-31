@@ -1,0 +1,1448 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container">
+    <div class="profile-container">
+        <div class="header-section">
+            <h1>{{ user.last_name }} {{ user.first_name }} {{ user.middle_name }}</h1>
+            <div class="status-indicators">
+                <span class="status {{ 'active' if user.is_active else 'inactive' }}">
+                    {{ 'Карта активна' if user.is_active else 'Карта заблокирована' }}
+                </span>
+                <button class="refresh-button hover-effect">
+                    <i class="fas fa-sync-alt"></i> Обновить страницу
+                </button>
+                <a class="logout-button" href="/logout" id="logoutButton">Выйти из системы</a>
+            </div>
+        </div>
+
+        <div class="personal-info">
+            <div class="info-block">
+                <h2>Личная информация</h2>
+                <dl>
+                    <dt>Фотография:</dt>
+                    <dd>
+                        {% if user.photo_path and user.photo_path.startswith('data:image') %}
+                            <img src="{{ user.photo_path }}" alt="Фото" class="photo-preview">
+                        {% else %}
+                            <div class="photo-placeholder">
+                                <i class="fas fa-user"></i>
+                            </div>
+                        {% endif %}
+                    </dd>
+                    
+                    <dt>Дата рождения:</dt>
+                    <dd>{{ user.birthday.strftime('%d.%m.%Y') if user.birthday else 'не указано' }}</dd>
+                    
+                    <dt>Телефон:</dt>
+                    <dd>{{ user.phone }}</dd>
+                    
+                    <dt>Email:</dt>
+                    <dd>{{ user.email }}</dd>
+                </dl>
+            </div>
+
+            <div class="info-block">
+                <h2>Рабочая информация</h2>
+                <dl>
+                    <dt>Табельный номер:</dt>
+                    <dd>{{ user.personnel_number }}</dd>
+                    
+                    <dt>Место работы:</dt>
+                    <dd>{{ user.work_place if user.work_place else 'не указано' }}</dd>
+                    
+                    <dt>Должность:</dt>
+                    <dd>{{ user.position if user.position else 'не указана' }}</dd>
+
+                    <dt>Время прихода:</dt>
+                    <dd>
+                        {% if user.in_time %}
+                            {{ user.in_time.strftime('%H:%M:%S') }}
+                            <span class="time-date">({{ user.in_time.strftime('%d.%m') }})</span>
+                        {% else %}
+                            Не зарегистрировано
+                        {% endif %}
+                    </dd>
+
+                    <dt>Расчетный лист:</dt>
+                    <dd><button class="hover-effect" onclick="showModal('calculation')">Посмотреть</button></dd>
+
+                    <dt>Табель работы:</dt>
+                    <dd><button class="hover-effect" onclick="showModal('timesheet')">Посмотреть</button></dd>
+                </dl>
+            </div>
+        </div>
+
+        <div class="personal-info">
+            <div class="info-block">
+                <h2>Отдых</h2>
+                <dl>
+                    <dt>До начала отпуска:</dt>
+                    <dd>{{ user['days_left'] }}</dd>
+                    
+                    <dt>Ближайшая дата отпуска:</dt>
+                    <dd>{{ user['vacation_dates'] }}</dd>
+                    
+                    <dt>Количество дней отдыха:</dt>
+                    <dd>{{ user.get('vacation_days', 'не указано') }}</dd>
+
+                    <dt>Посмотреть список отпусков:</dt>
+                    <dd>
+                        <div class="wrap-vacation">
+                            <button class="hover-effect-vacation" onclick="showModal('vacation')">Посмотреть</button>
+                            <img src="/static/vacation.png" class="vacation">
+                        </div>
+                    </dd>
+                </dl>
+            </div>
+
+            <div class="info-block">
+                <h2>Документы</h2>
+                <dl>
+                    <dt>Лист ознакомления:</dt>
+                    <dd><button class="hover-effect" onclick="showModal('familiarization')">(в разработке)</button></dd>
+
+                    <dt>Подписание документов:</dt>
+                    <dd><button class="hover-effect" onclick="showModal('signature')">(в разработке)</button></dd>
+
+                    <dt>Заявления:</dt>
+                    <dd><button class="hover-effect" onclick="showModal('applications')">(в разработке)</button></dd>
+
+                    <dt>Заказать справку:</dt>
+                    <dd><button class="hover-effect" onclick="showModal('certificate')">(в разработке)</button></dd>
+                </dl>
+            </div>
+        </div>
+
+        <div class="access-log">
+            <h2>История входов</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Дата и время</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Нет данных</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Модальные окна -->
+    <div id="modal-calculation" class="modal" style="display:none;">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('modal-calculation')">&times;</span>
+            <h2>Выбор даты для расчетного листа</h2>
+            <div class="modal-form">
+                <label for="year-select">Год:</label>
+                <select id="year-select">
+                    {% for year in range(2020, 2031) %}
+                    <option value="{{ year }}" {% if year == current_year %}selected{% endif %}>{{ year }}</option>
+                    {% endfor %}
+                </select>
+
+                <label for="month-select">Месяц:</label>
+                <select id="month-select">
+                    <option value="1" {% if current_month == 1 %}selected{% endif %}>Январь</option>
+                    <option value="2" {% if current_month == 2 %}selected{% endif %}>Февраль</option>
+                    <option value="3" {% if current_month == 3 %}selected{% endif %}>Март</option>
+                    <option value="4" {% if current_month == 4 %}selected{% endif %}>Апрель</option>
+                    <option value="5" {% if current_month == 5 %}selected{% endif %}>Май</option>
+                    <option value="6" {% if current_month == 6 %}selected{% endif %}>Июнь</option>
+                    <option value="7" {% if current_month == 7 %}selected{% endif %}>Июль</option>
+                    <option value="8" {% if current_month == 8 %}selected{% endif %}>Август</option>
+                    <option value="9" {% if current_month == 9 %}selected{% endif %}>Сентябрь</option>
+                    <option value="10" {% if current_month == 10 %}selected{% endif %}>Октябрь</option>
+                    <option value="11" {% if current_month == 11 %}selected{% endif %}>Ноябрь</option>
+                    <option value="12" {% if current_month == 12 %}selected{% endif %}>Декабрь</option>
+                </select>
+                <button class="hover-effect-window" onclick="fetchData()">Получить данные</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="modal-timesheet" class="modal" style="display:none;">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('modal-timesheet')">&times;</span>
+            <h2>Выбор периода для графика работы</h2>
+            <div class="modal-form">
+                <label for="timesheet-year-select">Год:</label>
+                <select id="timesheet-year-select">
+                    {% for year in range(2020, 2031) %}
+                    <option value="{{ year }}" {% if year == current_year %}selected{% endif %}>{{ year }}</option>
+                    {% endfor %}
+                </select>
+
+                <label for="timesheet-month-select">Месяц:</label>
+                <select id="timesheet-month-select">
+                    <option value="1" {% if current_month == 1 %}selected{% endif %}>Январь</option>
+                    <option value="2" {% if current_month == 2 %}selected{% endif %}>Февраль</option>
+                    <option value="3" {% if current_month == 3 %}selected{% endif %}>Март</option>
+                    <option value="4" {% if current_month == 4 %}selected{% endif %}>Апрель</option>
+                    <option value="5" {% if current_month == 5 %}selected{% endif %}>Май</option>
+                    <option value="6" {% if current_month == 6 %}selected{% endif %}>Июнь</option>
+                    <option value="7" {% if current_month == 7 %}selected{% endif %}>Июль</option>
+                    <option value="8" {% if current_month == 8 %}selected{% endif %}>Август</option>
+                    <option value="9" {% if current_month == 9 %}selected{% endif %}>Сентябрь</option>
+                    <option value="10" {% if current_month == 10 %}selected{% endif %}>Октябрь</option>
+                    <option value="11" {% if current_month == 11 %}selected{% endif %}>Ноябрь</option>
+                    <option value="12" {% if current_month == 12 %}selected{% endif %}>Декабрь</option>
+                </select>
+                <button class="hover-effect-window" onclick="fetchTimesheetData()">Получить график</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="modal-timesheet-result" class="modal modal-pdf" style="display:none;">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('modal-timesheet-result')">&times;</span>
+            <h2>График работы</h2>
+            <div class="modal-body">
+                <div id="timesheet-content" class="pdf-container">
+                    <div class="loading-indicator">
+                        <p>Загрузка данных...</p>
+                        <div class="loader"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-actions">
+                <button class="hover-effect-window" onclick="closeModal('modal-timesheet-result')">Закрыть</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="modal-payslip-result" class="modal modal-pdf" style="display:none;">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('modal-payslip-result')">&times;</span>
+            <h2>Расчетный лист</h2>
+            <div class="modal-body">
+                <div id="payslip-content" class="pdf-container">
+                    <div class="loading-indicator">
+                        <p>Загрузка данных...</p>
+                        <div class="loader"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-actions">
+                <button class="hover-effect-window" onclick="closeModal('modal-payslip-result')">Закрыть</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="modal-vacation" class="modal modal-pdf" style="display:none;">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('modal-vacation')">&times;</span>
+            <h2>Отпуска</h2>
+            <div class="modal-body">
+                <div class="modal-form">
+                    <label for="vacation-year-select">Год:</label>
+                    <select id="vacation-year-select">
+                        {% for year in range(2020, 2031) %}
+                        <option value="{{ year }}" {% if year == current_year %}selected{% endif %}>{{ year }}</option>
+                        {% endfor %}
+                    </select>
+                    <button class="hover-effect-window" onclick="fetchVacationData()">Получить данные</button>
+                </div>
+                <div id="vacation-content" class="pdf-container" style="display:none; margin-top: 15px;">
+                    <!-- PDF будет загружен сюда -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="modal-familiarization" class="modal" style="display:none;">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('modal-familiarization')">&times;</span>
+            <h2>Лист ознакомления</h2>
+            <table id="documents-table">
+                <thead>
+                    <tr>
+                        <th>Документ</th>
+                        <th>Дата получения</th>
+                        <th>Ознакомлен</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td colspan="3">Нет документов на ознакомление</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div id="modal-signature" class="modal" style="display:none;">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('modal-signature')">&times;</span>
+            <h2>Подписание документов</h2>
+            <table id="signature-documents-table">
+                <thead>
+                    <tr>
+                        <th>Документ</th>
+                        <th>Дата получения</th>
+                        <th>Подписать</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td colspan="3">Нет документов для подписания</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div id="modal-applications" class="modal" style="display:none;">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('modal-applications')">&times;</span>
+            <h2>Заявления и служебные записки</h2>
+            <div class="tab">
+                <button class="tablinks active" onclick="openTab(event, 'applications')">Заявления</button>
+                <button class="tablinks" onclick="openTab(event, 'memos')">Служебные записки</button>
+            </div>
+
+            <div id="applications" class="tabcontent">
+                <h3>Заявления</h3>
+                <table id="applications-table">
+                    <thead>
+                        <tr>
+                            <th>Название</th>
+                            <th>Дата подачи</th>
+                            <th>Статус</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td colspan="3">Нет заявлений</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div id="memos" class="tabcontent" style="display:none;">
+                <h3>Служебные записки</h3>
+                <table id="memos-table">
+                    <thead>
+                        <tr>
+                            <th>Название</th>
+                            <th>Дата подачи</th>
+                            <th>Статус</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td colspan="3">Нет служебных записок</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div id="modal-certificate" class="modal" style="display:none;">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('modal-certificate')">&times;</span>
+            <h2>Заказ справки</h2>
+            <div class="modal-form">
+                <p>Функционал находится в разработке</p>
+                <button class="hover-effect-window" onclick="closeModal('modal-certificate')">Закрыть</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Текущая дата для предзаполнения
+    const now = new Date();
+    const currentYear = now.getFullYear();
+    const currentMonth = now.getMonth() + 1;
+    let currentPdfUrl = null;
+    let currentFilename = null;
+
+    // Улучшенные функции для модальных окон
+    function showModal(modalId) {
+        // Скрыть все модальные окна
+        const modals = document.querySelectorAll('.modal');
+        modals.forEach(modal => {
+            modal.style.display = 'none';
+        });
+
+        // Показать выбранное модальное окно
+        const modalElement = document.getElementById('modal-' + modalId);
+        if (modalElement) {
+            modalElement.style.display = 'block';
+            
+            // Добавляем класс для анимации
+            setTimeout(() => {
+                modalElement.classList.add('modal-open');
+            }, 10);
+            
+            // Блокируем прокрутку body
+            document.body.style.overflow = 'hidden';
+            document.body.style.position = 'fixed';
+            document.body.style.width = '100%';
+            
+            // Обновляем размеры PDF контейнеров
+            setTimeout(updatePdfContainers, 50);
+        }
+    }
+
+    function closeModal(modalId) {
+        const modalElement = document.getElementById(modalId);
+        if (modalElement) {
+            // Убираем класс анимации
+            modalElement.classList.remove('modal-open');
+            
+            // Ждем окончания анимации перед скрытием
+            setTimeout(() => {
+                modalElement.style.display = 'none';
+                
+                // Восстанавливаем прокрутку body
+                document.body.style.overflow = 'auto';
+                document.body.style.position = 'static';
+                
+                // Очищаем PDF URL если есть
+                if (currentPdfUrl) {
+                    URL.revokeObjectURL(currentPdfUrl);
+                    currentPdfUrl = null;
+                    currentFilename = null;
+                }
+            }, 200);
+        }
+    }
+
+    // Функция для обновления размеров PDF контейнеров
+    function updatePdfContainers() {
+        const pdfContainers = document.querySelectorAll('.pdf-container');
+        pdfContainers.forEach(container => {
+            const iframe = container.querySelector('iframe');
+            if (iframe) {
+                // Устанавливаем размеры iframe на всю доступную область
+                const containerHeight = container.clientHeight;
+                const containerWidth = container.clientWidth;
+                
+                iframe.style.width = '100%';
+                iframe.style.height = '100%';
+                iframe.style.minHeight = '400px'; // Минимальная высота
+            }
+        });
+    }
+
+    // Закрытие модального окна при клике вне его
+    window.addEventListener('click', function(event) {
+        const modals = document.querySelectorAll('.modal');
+        modals.forEach(modal => {
+            if (event.target === modal) {
+                closeModal(modal.id);
+            }
+        });
+    });
+
+    // Закрытие по клавише Escape
+    document.addEventListener('keydown', function(event) {
+        if (event.key === 'Escape') {
+            const openModals = document.querySelectorAll('.modal[style*="display: block"]');
+            openModals.forEach(modal => {
+                closeModal(modal.id);
+            });
+        }
+    });
+
+    // Функция для обновления размеров модальных окон при изменении размера окна
+    function updateModalSizes() {
+        const modalContents = document.querySelectorAll('.modal-content');
+        const windowHeight = window.innerHeight;
+        const windowWidth = window.innerWidth;
+        
+        modalContents.forEach(content => {
+            // Адаптируем максимальную высоту в зависимости от размера экрана
+            if (windowHeight < 600) {
+                content.style.maxHeight = '80vh';
+            } else {
+                content.style.maxHeight = '90vh';
+            }
+            
+            // Адаптируем ширину для очень маленьких экранов
+            if (windowWidth < 480) {
+                content.style.width = '98%';
+                content.style.padding = '15px';
+            } else if (windowWidth < 768) {
+                content.style.width = '95%';
+                content.style.padding = '20px';
+            } else {
+                content.style.width = '90%';
+                content.style.padding = '25px';
+            }
+        });
+        
+        // Обновляем размеры PDF контейнеров
+        updatePdfContainers();
+    }
+
+    // Слушаем изменение размера окна
+    window.addEventListener('resize', updateModalSizes);
+
+    // Инициализация при загрузке
+    document.addEventListener('DOMContentLoaded', function() {
+        updateModalSizes();
+        
+        // Инициализация текущей даты в селектах
+        document.getElementById('year-select').value = currentYear;
+        document.getElementById('month-select').value = currentMonth;
+        document.getElementById('vacation-year-select').value = currentYear;
+        document.getElementById('timesheet-year-select').value = currentYear;
+        document.getElementById('timesheet-month-select').value = currentMonth;
+
+        // Обработчик кнопки обновления
+        const refreshButton = document.querySelector('.refresh-button');
+        if (refreshButton) {
+            refreshButton.addEventListener('click', function() {
+                const icon = this.querySelector('i');
+                
+                // Блокируем кнопку на время анимации
+                this.disabled = true;
+                icon.classList.add('rotating');
+                
+                // Обновляем страницу после завершения анимации
+                setTimeout(() => {
+                    icon.classList.remove('rotating');
+                    this.disabled = false;
+                    location.reload(true);
+                }, 500);
+            });
+        }
+
+        // Обработчик выхода
+        const logoutButton = document.getElementById('logoutButton');
+        if (logoutButton && !isWebClient()) {
+            logoutButton.href = "#";
+            logoutButton.addEventListener('click', function(e) {
+                e.preventDefault();
+                fetch('/logout?redirect=card')
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.redirect === 'login_by_card') {
+                            window.location.href = '/login_by_card';
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Logout error:', error);
+                        window.location.href = '/login_by_card';
+                    });
+            });
+        }
+    });
+
+    // Функция для определения типа клиента
+    function isWebClient() {
+        const userAgent = navigator.userAgent.toLowerCase();
+        return !userAgent.includes('qtwebengine');
+    }
+
+    function fetchData() {
+        const year = document.getElementById('year-select').value;
+        const month = document.getElementById('month-select').value;
+        
+        // Показываем индикатор загрузки
+        document.getElementById('payslip-content').innerHTML = `
+            <div class="loading-indicator">
+                <p>Загрузка данных за ${month}/${year}...</p>
+                <div class="loader"></div>
+            </div>
+        `;
+        
+        // Открываем окно с результатом
+        showModal('payslip-result');
+        
+        // Отправляем запрос на сервер
+        fetch('/api/get_payslip', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                year: year,
+                month: month
+            }),
+            credentials: 'include'
+        })
+        .then(response => {
+            if (!response.ok) {
+                return response.text().then(text => {
+                    throw new Error(text || `Ошибка сервера: ${response.status}`);
+                });
+            }
+            return response.blob();
+        })
+        .then(blob => {
+            displayPdfInModal(blob, 'payslip-content', `payslip_${year}_${month}.pdf`);
+        })
+        .catch(error => {
+            console.error('Ошибка:', error);
+            document.getElementById('payslip-content').innerHTML = `
+                <div class="error-message">
+                    <p>Ошибка при получении данных за ${month}/${year}</p>
+                    <p>${error.message}</p>
+                    <button class="hover-effect-window" onclick="showModal('calculation')">Попробовать снова</button>
+                </div>
+            `;
+        });
+    }
+
+    function fetchVacationData() {
+        const year = document.getElementById('vacation-year-select').value;
+        const vacationContent = document.getElementById('vacation-content');
+        const vacationForm = document.querySelector('#modal-vacation .modal-form');
+        
+        // Показываем индикатор загрузки
+        vacationContent.innerHTML = `
+            <div class="loading-indicator">
+                <p>Загрузка данных отпусков за ${year}...</p>
+                <div class="loader"></div>
+            </div>
+        `;
+        vacationContent.style.display = 'block';
+        
+        // Скрываем форму выбора
+        if (vacationForm) {
+            vacationForm.style.display = 'none';
+        }
+        
+        // Отправляем запрос на сервер
+        fetch('/api/get_vacations', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                year: year
+            }),
+            credentials: 'include'
+        })
+        .then(response => {
+            if (!response.ok) {
+                return response.text().then(text => {
+                    throw new Error(text || `Ошибка сервера: ${response.status}`);
+                });
+            }
+            return response.blob();
+        })
+        .then(blob => {
+            displayPdfInModal(blob, 'vacation-content', `vacations_${year}.pdf`);
+            
+            // Добавляем кнопку для возврата к выбору года
+            const actionsDiv = document.createElement('div');
+            actionsDiv.className = 'modal-actions';
+            actionsDiv.innerHTML = `
+                <button class="hover-effect-window" onclick="resetVacationModal()">Выбрать другой год</button>
+            `;
+            
+            // Вставляем кнопки после контейнера с PDF
+            vacationContent.parentNode.appendChild(actionsDiv);
+        })
+        .catch(error => {
+            console.error('Ошибка:', error);
+            vacationContent.innerHTML = `
+                <div class="error-message">
+                    <p>Ошибка при получении данных отпусков за ${year}</p>
+                    <p>${error.message}</p>
+                    <button class="hover-effect-window" onclick="resetVacationModal()">Попробовать снова</button>
+                </div>
+            `;
+        });
+    }
+
+    // Функция для сброса модального окна отпусков
+    function resetVacationModal() {
+        const vacationContent = document.getElementById('vacation-content');
+        const vacationForm = document.querySelector('#modal-vacation .modal-form');
+        const actions = document.querySelector('#modal-vacation .modal-actions');
+        
+        vacationContent.innerHTML = '';
+        vacationContent.style.display = 'none';
+        
+        if (vacationForm) {
+            vacationForm.style.display = 'block';
+        }
+        
+        if (actions) {
+            actions.remove();
+        }
+        
+        // Очищаем PDF URL
+        if (currentPdfUrl) {
+            URL.revokeObjectURL(currentPdfUrl);
+            currentPdfUrl = null;
+            currentFilename = null;
+        }
+    }
+
+    function fetchTimesheetData() {
+        const year = document.getElementById('timesheet-year-select').value;
+        const month = document.getElementById('timesheet-month-select').value;
+        
+        // Показываем индикатор загрузки
+        document.getElementById('timesheet-content').innerHTML = `
+            <div class="loading-indicator">
+                <p>Загрузка графика работы за ${month}/${year}...</p>
+                <div class="loader"></div>
+            </div>
+        `;
+        
+        // Открываем окно с результатом
+        showModal('timesheet-result');
+        
+        // Отправляем запрос на сервер
+        fetch('/api/get_timesheet', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                year: year,
+                month: month
+            }),
+            credentials: 'include'
+        })
+        .then(response => {
+            const contentType = response.headers.get('content-type');
+            
+            if (contentType && contentType.includes('application/json')) {
+                return response.json().then(data => {
+                    if (data.error) {
+                        throw new Error(data.message || data.error);
+                    } else if (data.info) {
+                        throw new Error(data.message || data.info);
+                    } else {
+                        throw new Error('Неизвестный ответ от сервера');
+                    }
+                });
+            }
+            
+            if (!response.ok) {
+                return response.text().then(text => {
+                    throw new Error(text || `Ошибка сервера: ${response.status}`);
+                });
+            }
+            return response.blob();
+        })
+        .then(blob => {
+            displayPdfInModal(blob, 'timesheet-content', `timesheet_${year}_${month}.pdf`);
+        })
+        .catch(error => {
+            console.error('Ошибка:', error);
+            document.getElementById('timesheet-content').innerHTML = `
+                <div class="error-message">
+                    <p>Ошибка при получении графика работы за ${month}/${year}</p>
+                    <p>${error.message}</p>
+                    <button class="hover-effect-window" onclick="showModal('timesheet')">Попробовать снова</button>
+                </div>
+            `;
+        });
+    }
+
+    // Улучшенная функция для отображения PDF в модальных окнах
+    function displayPdfInModal(blob, containerId, filename) {
+        // Очищаем предыдущий PDF
+        if (currentPdfUrl) {
+            URL.revokeObjectURL(currentPdfUrl);
+        }
+        
+        currentPdfUrl = URL.createObjectURL(blob);
+        currentFilename = filename;
+        const container = document.getElementById(containerId);
+        
+        // Создаем iframe для PDF
+        const iframe = document.createElement('iframe');
+        iframe.src = currentPdfUrl;
+        iframe.className = 'pdf-viewer';
+        iframe.style.width = '100%';
+        iframe.style.height = '100%';
+        iframe.style.border = 'none';
+        iframe.style.borderRadius = '5px';
+        
+        // Очищаем контейнер и добавляем iframe
+        container.innerHTML = '';
+        container.appendChild(iframe);
+        
+        // Обновляем размеры PDF контейнеров
+        setTimeout(updatePdfContainers, 100);
+        
+        // Добавляем обработчик загрузки iframe для дополнительной настройки
+        iframe.onload = function() {
+            updatePdfContainers();
+        };
+    }
+
+    // Вспомогательные функции
+    function openTab(evt, tabName) {
+        const tabcontents = document.querySelectorAll('.tabcontent');
+        tabcontents.forEach(tabcontent => {
+            tabcontent.style.display = 'none';
+        });
+
+        const tablinks = document.querySelectorAll('.tablinks');
+        tablinks.forEach(tablink => {
+            tablink.classList.remove('active');
+        });
+
+        document.getElementById(tabName).style.display = 'block';
+        evt.currentTarget.classList.add('active');
+    }
+
+    function confirmFamiliarization(documentId) {
+        console.log(`Документ с ID ${documentId} отмечен как ознакомленный.`);
+        // Реализация подтверждения ознакомления
+    }
+
+    function confirmSignature(documentId) {
+        console.log(`Документ с ID ${documentId} подписан.`);
+        // Реализация подтверждения подписи
+    }
+</script>
+
+<style>
+    /* Основные стили */
+    body {
+        font-family: 'Arial', sans-serif;
+        margin: 0;
+        padding: 0;
+        background: linear-gradient(135deg, #1e90ff 0%, #ffffff 100%) !important;
+        min-height: 100vh;
+    }
+
+    .container {
+        max-width: 1200px;
+        margin: 0 auto;
+        background-color: white;
+        padding: 30px;
+        border-radius: 10px;
+        box-shadow: 0 0 20px rgba(0,0,0,0.1);
+    }
+
+    .hover-effect{
+        width: 40%;
+        height: 23px;
+        background-color:#0072B8;
+        color: white;
+        border: 0px;
+        border-radius: 5px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .hover-effect:hover {
+        background-color: #005f8d;
+        transform: translateY(-2px);
+    }
+
+    .tablinks{
+        width: 30%;
+        height: 23px;
+        background-color:#0072B8;
+        color: white;
+        border: 0px;
+        border-radius: 5px;  
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .tablinks:hover {
+        background-color: #005f8d;
+    }
+
+    .hover-effect-window{
+        width: 100%;
+        height: 35px;
+        background-color:#0072B8;
+        color: white;
+        border: 0px;
+        border-radius: 5px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        font-size: 14px;
+        margin: 5px 0;
+    }
+
+    .hover-effect-window:hover {
+        background-color: #005f8d;
+        transform: translateY(-2px);
+    }
+
+    .hover-effect-vacation{
+        display: grid;
+        grid-column-start: 1;
+        width: 100%;
+        height: 23px;
+        background-color:#0072B8;
+        color: white;
+        border: 0px;
+        border-radius: 5px;
+        place-items: center;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .hover-effect-vacation:hover {
+        background-color: #005f8d;
+        transform: translateY(-2px);
+    }
+
+    .vacation{
+        display: grid;
+        grid-column-start: 2;
+        width: 90px;
+        height: 60px;
+        margin-left: 20px;
+        margin-top: 10px;
+    }
+
+    /* Секция профиля */
+    .profile-container {
+        display: grid;
+        gap: 30px;
+    }
+
+    .header-section {
+        text-align: center;
+        border-bottom: 2px solid #0072b8;
+        padding-bottom: 20px;
+        position: relative;
+    }
+
+    .header-section h1 {
+        color: #0072b8;
+        margin: 0;
+        margin-top: 20px;
+    }
+
+    .status-indicators {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 15px;
+        margin-top: 15px;
+        flex-wrap: wrap;
+    }
+
+    .status-indicators > .status,
+    .status-indicators > .refresh-button,
+    .status-indicators > .logout-button {
+        font-family: Arial, sans-serif;
+        font-weight: bold;
+        font-size: 0.95rem;
+        height: 30px;
+        line-height: 30px;
+        padding: 0 20px;
+        border-radius: 20px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        cursor: default;
+        user-select: none;
+        white-space: nowrap;
+        width: 250px;
+        text-align: center;
+        box-sizing: border-box;
+    }
+
+    .status-indicators > .status {
+        color: white;
+    }
+
+    .status-indicators > .logout-button {
+        background-color: #e74c3c;
+        color: white;
+        text-decoration: none;
+        cursor: pointer;
+        transition: background-color 0.3s;
+    }
+
+    .status-indicators > .logout-button:hover {
+        background-color: #c0392b;
+    }
+
+    .status-indicators > .refresh-button {
+        background-color: #3c57ee;
+        color: white;
+        border: none;
+        cursor: pointer;
+        transition: background-color 0.3s, transform 0.3s ease;
+    }
+
+    .status-indicators > .refresh-button:hover {
+        background-color: #0024f1;
+        transform: scale(1.05);
+    }
+
+    .status-indicators > .refresh-button i {
+        margin-right: 6px;
+        transition: transform 0.5s ease;
+    }
+
+    .status-indicators > .refresh-button:hover i {
+        transform: rotate(360deg);
+    }
+
+    /* Стили для фотографии */
+    .photo-preview {
+        width: 100px;
+        height: 100px;
+        border-radius: 8px;
+        object-fit: cover;
+        border: 1px solid #ddd;
+    }
+
+    .photo-placeholder {
+        width: 100px;
+        height: 100px;
+        background: #f0f8ff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 40px;
+        color: #0072b8;
+        border-radius: 8px;
+        border: 1px solid #ddd;
+    }
+
+    /* Информационные блоки */
+    .personal-info {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 30px;
+    }
+
+    @media (max-width: 768px) {
+        .personal-info {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    .info-block {
+        background: #f0f8ff;
+        padding: 25px;
+        border-radius: 8px;
+        border: 1px solid #0072b8;
+    }
+
+    dl {
+        display: grid;
+        grid-template-columns: max-content 1fr;
+        gap: 15px 25px;
+    }
+
+    @media (max-width: 480px) {
+        dl {
+            grid-template-columns: 1fr;
+            gap: 10px;
+        }
+    }
+
+    dt {
+        font-weight: 600;
+        color: #333;
+    }
+
+    dd {
+        margin: 0;
+        color: #2c3e50;
+    }
+
+    .wrap-vacation{
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        align-items: center;
+    }
+
+    /* Таблица истории входов */
+    .access-log {
+        margin-top: 30px;
+    }
+
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 15px;
+    }
+
+    th, td {
+        padding: 12px 15px;
+        text-align: left;
+        border-bottom: 1px solid #ecf0f1;
+    }
+
+    th {
+        background: #0072b8;
+        color: white;
+    }
+
+    tr:nth-child(even) {
+        background-color: #f8f9fa;
+    }
+
+    /* Модальные окна - наследование градиентного фона */
+    .modal {
+        display: none;
+        position: fixed;
+        z-index: 1000;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        overflow: auto;
+        background: linear-gradient(135deg, rgba(30, 144, 255, 0.95) 0%, rgba(255, 255, 255, 0.95) 100%);
+        backdrop-filter: blur(10px);
+        animation: fadeIn 0.3s ease;
+    }
+
+    .modal-content {
+        background: linear-gradient(145deg, #ffffff 0%, #f8f9fa 100%);
+        margin: auto;
+        padding: 25px;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 15px;
+        box-shadow: 
+            0 20px 40px rgba(0, 0, 0, 0.1),
+            0 0 0 1px rgba(255, 255, 255, 0.3),
+            inset 0 1px 0 rgba(255, 255, 255, 0.6);
+        width: 90%;
+        max-width: 900px;
+        max-height: 90vh;
+        overflow-y: auto;
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        animation: slideIn 0.3s ease;
+        display: flex;
+        flex-direction: column;
+    }
+
+    /* Специальные стили для модальных окон с PDF */
+    .modal-pdf .modal-content {
+        width: 95%;
+        height: 95vh;
+        max-width: 1200px;
+        max-height: 95vh;
+        padding: 20px;
+        background: linear-gradient(145deg, #ffffff 0%, #f8f9fa 100%);
+    }
+
+    .modal-body {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        min-height: 0;
+    }
+
+    /* Анимации для плавного появления */
+    @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+
+    @keyframes slideIn {
+        from { 
+            opacity: 0;
+            transform: translate(-50%, -60%);
+        }
+        to { 
+            opacity: 1;
+            transform: translate(-50%, -50%);
+        }
+    }
+
+    /* Улучшенные стили для кнопки закрытия */
+    .close {
+        color: #0072b8;
+        float: right;
+        font-size: 32px;
+        font-weight: bold;
+        position: absolute;
+        top: 10px;
+        right: 15px;
+        cursor: pointer;
+        transition: color 0.3s ease, transform 0.2s ease;
+        line-height: 1;
+        z-index: 1001;
+        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+    }
+
+    .close:hover,
+    .close:focus {
+        color: #005f8d;
+        text-decoration: none;
+        transform: scale(1.1);
+    }
+
+    /* Адаптивность для модальных окон */
+    @media (max-width: 768px) {
+        .modal-content {
+            width: 95%;
+            padding: 20px;
+            max-height: 85vh;
+        }
+        
+        .modal-pdf .modal-content {
+            width: 98%;
+            height: 90vh;
+            padding: 15px;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .modal-content {
+            width: 98%;
+            padding: 15px;
+            margin: 5px;
+            max-height: 80vh;
+        }
+        
+        .modal-pdf .modal-content {
+            width: 99%;
+            height: 85vh;
+            padding: 10px;
+        }
+        
+        .close {
+            font-size: 24px;
+            top: 5px;
+            right: 10px;
+        }
+    }
+
+    /* Стили для контента внутри модальных окон */
+    .modal-content h2 {
+        color: #0072b8;
+        margin-top: 0;
+        margin-bottom: 20px;
+        text-align: center;
+        font-size: 1.5em;
+        flex-shrink: 0;
+        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+    }
+
+    .modal-form {
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+        margin: 20px 0;
+        flex-shrink: 0;
+    }
+
+    .modal-form label {
+        display: block;
+        margin-bottom: 5px;
+        font-weight: bold;
+        color: #333;
+    }
+
+    .modal-form select {
+        padding: 10px 12px;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+        background-color: white;
+        font-size: 14px;
+        width: 100%;
+        box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
+    }
+
+    /* Стили для PDF контейнеров */
+    .pdf-container {
+        width: 100%;
+        flex: 1;
+        border: 1px solid rgba(0, 114, 184, 0.2);
+        border-radius: 8px;
+        overflow: hidden;
+        position: relative;
+        min-height: 400px;
+        background: white;
+        box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
+    }
+
+    .pdf-container iframe {
+        width: 100%;
+        height: 100%;
+        border: none;
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+    }
+
+    /* Кнопки действий в модальных окнах */
+    .modal-actions {
+        display: flex;
+        gap: 15px;
+        justify-content: center;
+        margin-top: 20px;
+        flex-wrap: wrap;
+        flex-shrink: 0;
+    }
+
+    .modal-actions button {
+        padding: 10px 25px;
+        background: linear-gradient(135deg, #0072b8 0%, #005f8d 100%);
+        color: white;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        font-size: 14px;
+        min-width: 120px;
+        box-shadow: 0 4px 6px rgba(0, 114, 184, 0.2);
+    }
+
+    .modal-actions button:hover {
+        background: linear-gradient(135deg, #005f8d 0%, #004a70 100%);
+        transform: translateY(-2px);
+        box-shadow: 0 6px 12px rgba(0, 114, 184, 0.3);
+    }
+
+    /* Улучшенные стили для индикаторов загрузки */
+    .loading-indicator {
+        text-align: center;
+        padding: 40px 20px;
+        color: #0072b8;
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 100%;
+    }
+
+    .loading-indicator p {
+        margin-bottom: 20px;
+        font-size: 1.1em;
+    }
+
+    .loader {
+        border: 4px solid #f3f3f3;
+        border-top: 4px solid #0072b8;
+        border-radius: 50%;
+        width: 50px;
+        height: 50px;
+        animation: spin 1s linear infinite;
+        margin: 0 auto;
+    }
+
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+
+    /* Стили для сообщений об ошибках */
+    .error-message {
+        text-align: center;
+        padding: 30px 20px;
+        color: #e74c3c;
+        background: linear-gradient(135deg, #ffeaea 0%, #ffd6d6 100%);
+        border-radius: 8px;
+        margin: 20px 0;
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 90%;
+        border: 1px solid #ffb8b8;
+        box-shadow: 0 4px 6px rgba(231, 76, 60, 0.1);
+    }
+
+    .error-message p {
+        margin-bottom: 15px;
+    }
+
+    /* Стили для вкладок */
+    .tab {
+        display: flex;
+        border-bottom: 1px solid #ccc;
+        margin-bottom: 20px;
+        background: rgba(255, 255, 255, 0.5);
+        border-radius: 8px 8px 0 0;
+        padding: 5px;
+    }
+
+    .tab button {
+        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+        border: none;
+        outline: none;
+        cursor: pointer;
+        padding: 14px 16px;
+        transition: 0.3s;
+        font-size: 17px;
+        border-radius: 5px;
+        margin: 0 2px;
+        flex: 1;
+    }
+
+    .tab button:hover {
+        background: linear-gradient(135deg, #e9ecef 0%, #dee2e6 100%);
+    }
+
+    .tab button.active {
+        background: linear-gradient(135deg, #0072b8 0%, #005f8d 100%);
+        color: white;
+        box-shadow: 0 2px 4px rgba(0, 114, 184, 0.2);
+    }
+
+    .tabcontent {
+        display: none;
+        padding: 6px 12px;
+        animation: fadeEffect 1s;
+        background: white;
+        border-radius: 0 0 8px 8px;
+    }
+
+    @keyframes fadeEffect {
+        from {opacity: 0;}
+        to {opacity: 1;}
+    }
+
+    /* Анимация вращения для кнопки обновления */
+    .rotating {
+        animation: rotate 0.5s linear;
+    }
+
+    @keyframes rotate {
+        from { transform: rotate(0deg); }
+        to { transform: rotate(360deg); }
+    }
+
+    /* Улучшенные стили для таблиц в модальных окнах */
+    .modal-content table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 15px 0;
+        background: white;
+        border-radius: 8px;
+        overflow: hidden;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    .modal-content th, 
+    .modal-content td {
+        padding: 12px 15px;
+        text-align: left;
+        border-bottom: 1px solid #ecf0f1;
+    }
+
+    .modal-content th {
+        background: linear-gradient(135deg, #0072b8 0%, #005f8d 100%);
+        color: white;
+        font-weight: 600;
+    }
+
+    .modal-content tr:nth-child(even) {
+        background-color: #f8f9fa;
+    }
+
+    .modal-content tr:hover {
+        background-color: #e3f2fd;
+    }
+</style>
+{% endblock %}

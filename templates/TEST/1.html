@@ -1,0 +1,2617 @@
+
+/* Основные стили */
+body {
+    font-family: 'Arial', sans-serif;
+    margin: 0;
+    padding: 20px;
+    background-color: #f5f5f5;
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    background: white;
+    padding: 30px;
+    border-radius: 10px;
+    box-shadow: 0 0 20px rgba(0,0,0,0.1);
+}
+
+/* Секция профиля */
+.profile-container {
+    display: grid;
+    gap: 30px;
+}
+
+.header-section {
+    text-align: center;
+    border-bottom: 2px solid #eee;
+    padding-bottom: 20px;
+}
+
+.header-section h1 {
+    color: #2c3e50;
+    margin: 0;
+}
+
+/* Статусы */
+.status-indicators {
+    margin-top: 15px;
+}
+
+.status {
+    display: inline-block;
+    padding: 8px 20px;
+    border-radius: 20px;
+    font-size: 0.9em;
+    margin: 0 5px;
+}
+
+.online { background: #27ae60; color: white; }
+.offline { background: #e74c3c; color: white; }
+.active { background: #efeef1; color: white; }
+.inactive { background: #e74c3c; color: white; }
+
+.photo-placeholder {
+    width: 100px;
+    height: 100px;
+    background: #f0f8ff;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 40px;
+    color: #0072b8;
+    border: 1px solid #ddd;
+}
+
+/* Информационные блоки */
+.personal-info {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 30px;
+}
+
+.info-block {
+    background: #f8f9fa;
+    padding: 25px;
+    border-radius: 8px;
+    border: 1px solid #eee;
+}
+
+.info-block h2 {
+    color: #34495e;
+    margin-top: 0;
+}
+
+dl {
+    display: grid;
+    grid-template-columns: max-content 1fr;
+    gap: 15px 25px;
+}
+
+dt {
+    font-weight: 600;
+    color: #7f8c8d;
+}
+
+dd {
+    margin: 0;
+    color: #2c3e50;
+}
+
+/* Таблица истории входов */
+.access-log {
+    margin-top: 30px;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 15px;
+}
+
+th, td {
+    padding: 12px 15px;
+    text-align: left;
+    border-bottom: 1px solid #ecf0f1;
+}
+
+th {
+    background: #3498db;
+    color: white;
+}
+
+tr:nth-child(even) {
+    background-color: #f8f9fa;
+}
+
+/* Адаптивность */
+@media (max-width: 768px) {
+    .personal-info {
+        grid-template-columns: 1fr;
+    }
+    
+    dl {
+        grid-template-columns: 1fr;
+        gap: 10px;
+    }
+}
+
+.transition {
+    transition: all 0.3s ease;
+}
+
+.hover-effect:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+}
+.hover-effect{
+    width: 50%;
+    height: 25px;
+    background-color: #0072B8;
+}
+
+как в этом коде: 
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container">
+    <div class="profile-container">
+        <div class="header-section">
+            <h1>{{ user.last_name }} {{ user.first_name }} {{ user.middle_name }}</h1>
+            <div class="status-indicators">
+                <span class="status {{ 'active' if user.is_active else 'inactive' }}">
+                    {{ 'Карта активна' if user.is_active else 'Карта заблокирована' }}
+                </span>
+                <button class="refresh-button hover-effect">
+                    <i class="fas fa-sync-alt"></i> Обновить страницу
+                </button>
+                <a class="logout-button" href="/logout" id="logoutButton">Выйти из системы</a>
+            </div>
+        </div>
+
+        <!-- Навигация по вкладкам профиля -->
+        <div class="profile-tabs">
+            <button class="profile-tab active" data-tab="main-profile">
+                <i class="fas fa-user-circle"></i> Основная информация
+            </button>
+            <button class="profile-tab" data-tab="purchase">
+                <i class="fas fa-shopping-cart"></i> Приобретение продукции
+            </button>
+        </div>
+
+        <!-- Вкладка основной информации -->
+        <div id="main-profile" class="profile-tab-content active">
+            <div class="personal-info">
+                <div class="info-block">
+                    <h2><i class="fas fa-user"></i> Личная информация</h2>
+                    <dl>
+                        <dt>Фотография:</dt>
+                        <dd>
+                            {% if user.photo_path and user.photo_path.startswith('data:image') %}
+                                <img src="{{ user.photo_path }}" alt="Фото" class="photo-preview">
+                            {% else %}
+                                <div class="photo-placeholder">
+                                    <i class="fas fa-user"></i>
+                                </div>
+                            {% endif %}
+                        </dd>
+                        
+                        <dt>Дата рождения:</dt>
+                        <dd>{{ user.birthday.strftime('%d.%m.%Y') if user.birthday else 'не указано' }}</dd>
+                        
+                        <dt>Телефон:</dt>
+                        <dd>{{ user.phone }}</dd>
+                        
+                        <dt>Email:</dt>
+                        <dd>{{ user.email }}</dd>
+                    </dl>
+                </div>
+
+                <div class="info-block">
+                    <h2><i class="fas fa-briefcase"></i> Рабочая информация</h2>
+                    <dl>
+                        <dt>Табельный номер:</dt>
+                        <dd>{{ user.personnel_number }}</dd>
+                        
+                        <dt>Место работы:</dt>
+                        <dd>{{ user.work_place if user.work_place else 'не указано' }}</dd>
+                        
+                        <dt>Должность:</dt>
+                        <dd>{{ user.position if user.position else 'не указана' }}</dd>
+
+                        <dt>Время прихода:</dt>
+                        <dd>
+                            {% if user.in_time %}
+                                {{ user.in_time.strftime('%H:%M:%S') }}
+                                <span class="time-date">({{ user.in_time.strftime('%d.%m') }})</span>
+                            {% else %}
+                                Не зарегистрировано
+                            {% endif %}
+                        </dd>
+
+                        <dt>Расчетный лист:</dt>
+                        <dd><button class="hover-effect" onclick="showModal('calculation')"><i class="fas fa-file-invoice-dollar"></i> Посмотреть</button></dd>
+
+                        <dt>Табель работы:</dt>
+                        <dd><button class="hover-effect" onclick="showModal('timesheet')"><i class="fas fa-calendar-alt"></i> Посмотреть</button></dd>
+                    </dl>
+                </div>
+            </div>
+
+            <div class="personal-info">
+                <div class="info-block">
+                    <h2><i class="fas fa-umbrella-beach"></i> Отдых</h2>
+                    <dl>
+                        <dt>До начала отпуска:</dt>
+                        <dd><span class="vacation-days">{{ user['days_left'] }}</span></dd>
+                        
+                        <dt>Ближайшая дата отпуска:</dt>
+                        <dd><span class="vacation-date">{{ user['vacation_dates'] }}</span></dd>
+                        
+                        <dt>Количество дней отдыха:</dt>
+                        <dd><span class="vacation-count">{{ user.get('vacation_days', 'не указано') }}</span></dd>
+
+                        <dt>Посмотреть список отпусков:</dt>
+                        <dd>
+                            <div class="wrap-vacation">
+                                <button class="hover-effect-vacation" onclick="showModal('vacation')"><i class="fas fa-list"></i> Посмотреть</button>
+                                <img src="/static/vacation.png" class="vacation">
+                            </div>
+                        </dd>
+                    </dl>
+                </div>
+
+                <div class="info-block">
+                    <h2><i class="fas fa-file-contract"></i> Документы</h2>
+                    <dl>
+                        <dt>Лист ознакомления:</dt>
+                        <dd><button class="hover-effect" onclick="showModal('familiarization')"><i class="fas fa-eye"></i> (в разработке)</button></dd>
+
+                        <dt>Подписание документов:</dt>
+                        <dd><button class="hover-effect" onclick="showModal('signature')"><i class="fas fa-signature"></i> (в разработке)</button></dd>
+
+                        <dt>Заявления:</dt>
+                        <dd><button class="hover-effect" onclick="showModal('applications')"><i class="fas fa-edit"></i> (в разработке)</button></dd>
+
+                        <dt>Заказать справку:</dt>
+                        <dd><button class="hover-effect" onclick="showModal('certificate')"><i class="fas fa-certificate"></i> (в разработке)</button></dd>
+                    </dl>
+                </div>
+            </div>
+
+            <div class="access-log">
+                <h2><i class="fas fa-history"></i> История входов</h2>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Дата и время</th>
+                            <th>IP адрес</th>
+                            <th>Устройство</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>{{ now.strftime('%d.%m.%Y %H:%M') if now else '01.01.2024 09:00' }}</td>
+                            <td>192.168.1.1</td>
+                            <td>Chrome, Windows</td>
+                        </tr>
+                        <tr>
+                            <td colspan="3" class="no-data">Загружаются предыдущие записи...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Вкладка приобретения продукции -->
+        <div id="purchase" class="profile-tab-content">
+            <div class="purchase-container">
+                <div class="purchase-header">
+                    <h2><i class="fas fa-shopping-bag"></i> Приобретение продукции</h2>
+                    <p>Выберите категорию товаров и оформите заказ</p>
+                </div>
+
+                <nav class="purchase-tabs" role="tablist" aria-label="Вкладки продукции">
+                    <div class="purchase-tab active" role="tab" aria-selected="true" tabindex="0" 
+                         aria-controls="purchase-tab-new" id="purchase-tab-new-btn">
+                        <i class="fas fa-tags"></i> Новая продукция
+                    </div>
+                    <div class="purchase-tab" role="tab" aria-selected="false" tabindex="-1" 
+                         aria-controls="purchase-tab-discount" id="purchase-tab-discount-btn">
+                        <i class="fas fa-percentage"></i> Уцененная продукция
+                    </div>
+                    <div class="purchase-tab" role="tab" aria-selected="false" tabindex="-1" 
+                         aria-controls="purchase-tab-order" id="purchase-tab-order-btn">
+                        <i class="fas fa-shopping-cart"></i> Оформление заказа
+                    </div>
+                </nav>
+
+                <section id="purchase-tab-new" class="purchase-tab-content active" role="tabpanel" aria-labelledby="purchase-tab-new-btn">
+                    <div class="table-container">
+                        <table aria-label="Новая продукция">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Товар</th>
+                                    <th>Описание</th>
+                                    <th>Дата поступления</th>
+                                    <th>Количество</th>
+                                    <th>Цена</th>
+                                    <th>Действие</th>
+                                </tr>
+                            </thead>
+                            <tbody id="new-products-body">
+                                <tr><td colspan="7" class="purchase-loading"><i class="fas fa-spinner fa-spin"></i> Загрузка данных...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <section id="purchase-tab-discount" class="purchase-tab-content" role="tabpanel" aria-labelledby="purchase-tab-discount-btn">
+                    <div class="table-container">
+                        <table aria-label="Уцененная продукция">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Товар</th>
+                                    <th>Описание</th>
+                                    <th>Дата уценки</th>
+                                    <th>Количество</th>
+                                    <th>Цена</th>
+                                    <th>Действие</th>
+                                </tr>
+                            </thead>
+                            <tbody id="discount-products-body">
+                                <tr><td colspan="7" class="purchase-loading"><i class="fas fa-spinner fa-spin"></i> Загрузка данных...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <section id="purchase-tab-order" class="purchase-tab-content" role="tabpanel" aria-labelledby="purchase-tab-order-btn">
+                    <div class="order-summary">
+                        <h3><i class="fas fa-clipboard-list"></i> Оформление заказа</h3>
+                        
+                        <div class="order-info-card">
+                            <div class="order-info-item">
+                                <strong><i class="fas fa-user"></i> Покупатель:</strong>
+                                <span id="user-fullname">{{ user.last_name }} {{ user.first_name }} {{ user.middle_name }}</span>
+                            </div>
+                            <div class="order-info-item">
+                                <strong><i class="fas fa-credit-card"></i> Номер карты:</strong>
+                                <span id="user-card">Загрузка...</span>
+                            </div>
+                            <div class="order-info-item">
+                                <strong><i class="fas fa-hashtag"></i> Номер заказа:</strong>
+                                <span id="order-number" class="order-number">...</span>
+                            </div>
+                        </div>
+
+                        <div class="table-container">
+                            <table aria-label="Товары для заказа">
+                                <thead>
+                                    <tr>
+                                        <th>Артикул</th>
+                                        <th>Название</th>
+                                        <th>Цена</th>
+                                        <th>Количество</th>
+                                        <th>Сумма</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="order-tbody">
+                                    <tr><td colspan="5" class="purchase-empty"><i class="fas fa-info-circle"></i> Пока нет выбранных товаров</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <div class="order-total-card">
+                            <div class="total-amount">
+                                <strong>Итого: </strong>
+                                <span id="order-total" class="total-price">0.00 руб.</span>
+                            </div>
+                        </div>
+
+                        <div class="payment-section">
+                            <label for="payment-method"><i class="fas fa-money-bill-wave"></i> Способ оплаты:</label>
+                            <select id="payment-method" aria-label="Выбор способа оплаты" class="payment-select">
+                                <option value="cash">За наличный расчет</option>
+                                <option value="card">По карте</option>
+                                <option value="salary">В счет зарплаты</option>
+                            </select>
+                        </div>
+
+                        <div class="purchase-buttons">
+                            <button id="confirm-order" class="confirm-button">
+                                <i class="fas fa-check-circle"></i> Подтвердить и сохранить
+                            </button>
+                            <button id="cancel-order" class="cancel-button">
+                                <i class="fas fa-times-circle"></i> Отмена
+                            </button>
+                        </div>
+
+                        <div id="order-message" role="alert" aria-live="polite" class="order-message"></div>
+                    </div>
+                </section>
+            </div>
+        </div>
+    </div>
+
+    <!-- Модальные окна -->
+    <div id="modal-calculation" class="modal" style="display:none;">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('modal-calculation')">&times;</span>
+            <h2><i class="fas fa-file-invoice-dollar"></i> Выбор даты для расчетного листа</h2>
+            <div class="modal-form">
+                <label for="year-select">Год:</label>
+                <select id="year-select">
+                    {% for year in range(2020, 2031) %}
+                    <option value="{{ year }}" {% if year == current_year %}selected{% endif %}>{{ year }}</option>
+                    {% endfor %}
+                </select>
+
+                <label for="month-select">Месяц:</label>
+                <select id="month-select">
+                    <option value="1" {% if current_month == 1 %}selected{% endif %}>Январь</option>
+                    <option value="2" {% if current_month == 2 %}selected{% endif %}>Февраль</option>
+                    <option value="3" {% if current_month == 3 %}selected{% endif %}>Март</option>
+                    <option value="4" {% if current_month == 4 %}selected{% endif %}>Апрель</option>
+                    <option value="5" {% if current_month == 5 %}selected{% endif %}>Май</option>
+                    <option value="6" {% if current_month == 6 %}selected{% endif %}>Июнь</option>
+                    <option value="7" {% if current_month == 7 %}selected{% endif %}>Июль</option>
+                    <option value="8" {% if current_month == 8 %}selected{% endif %}>Август</option>
+                    <option value="9" {% if current_month == 9 %}selected{% endif %}>Сентябрь</option>
+                    <option value="10" {% if current_month == 10 %}selected{% endif %}>Октябрь</option>
+                    <option value="11" {% if current_month == 11 %}selected{% endif %}>Ноябрь</option>
+                    <option value="12" {% if current_month == 12 %}selected{% endif %}>Декабрь</option>
+                </select>
+                <button class="hover-effect-window" onclick="fetchData()"><i class="fas fa-download"></i> Получить данные</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="modal-timesheet" class="modal" style="display:none;">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('modal-timesheet')">&times;</span>
+            <h2><i class="fas fa-calendar-alt"></i> Выбор периода для графика работы</h2>
+            <div class="modal-form">
+                <label for="timesheet-year-select">Год:</label>
+                <select id="timesheet-year-select">
+                    {% for year in range(2020, 2031) %}
+                    <option value="{{ year }}" {% if year == current_year %}selected{% endif %}>{{ year }}</option>
+                    {% endfor %}
+                </select>
+
+                <label for="timesheet-month-select">Месяц:</label>
+                <select id="timesheet-month-select">
+                    <option value="1" {% if current_month == 1 %}selected{% endif %}>Январь</option>
+                    <option value="2" {% if current_month == 2 %}selected{% endif %}>Февраль</option>
+                    <option value="3" {% if current_month == 3 %}selected{% endif %}>Март</option>
+                    <option value="4" {% if current_month == 4 %}selected{% endif %}>Апрель</option>
+                    <option value="5" {% if current_month == 5 %}selected{% endif %}>Май</option>
+                    <option value="6" {% if current_month == 6 %}selected{% endif %}>Июнь</option>
+                    <option value="7" {% if current_month == 7 %}selected{% endif %}>Июль</option>
+                    <option value="8" {% if current_month == 8 %}selected{% endif %}>Август</option>
+                    <option value="9" {% if current_month == 9 %}selected{% endif %}>Сентябрь</option>
+                    <option value="10" {% if current_month == 10 %}selected{% endif %}>Октябрь</option>
+                    <option value="11" {% if current_month == 11 %}selected{% endif %}>Ноябрь</option>
+                    <option value="12" {% if current_month == 12 %}selected{% endif %}>Декабрь</option>
+                </select>
+                <button class="hover-effect-window" onclick="fetchTimesheetData()"><i class="fas fa-download"></i> Получить график</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- PDF модальные окна с автоматическим размером -->
+    <div id="modal-timesheet-result" class="modal modal-pdf-auto" style="display:none;">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('modal-timesheet-result')">&times;</span>
+            <h2><i class="fas fa-calendar-alt"></i> График работы</h2>
+            <div class="modal-body">
+                <div id="timesheet-content" class="pdf-container">
+                    <div class="loading-indicator">
+                        <p><i class="fas fa-spinner fa-spin"></i> Загрузка данных...</p>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-actions">
+                <button class="hover-effect-window" onclick="closeModal('modal-timesheet-result')"><i class="fas fa-times"></i> Закрыть</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="modal-payslip-result" class="modal modal-pdf-auto" style="display:none;">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('modal-payslip-result')">&times;</span>
+            <h2><i class="fas fa-file-invoice-dollar"></i> Расчетный лист</h2>
+            <div class="modal-body">
+                <div id="payslip-content" class="pdf-container">
+                    <div class="loading-indicator">
+                        <p><i class="fas fa-spinner fa-spin"></i> Загрузка данных...</p>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-actions">
+                <button class="hover-effect-window" onclick="closeModal('modal-payslip-result')"><i class="fas fa-times"></i> Закрыть</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="modal-vacation" class="modal modal-pdf-auto" style="display:none;">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('modal-vacation')">&times;</span>
+            <h2><i class="fas fa-umbrella-beach"></i> Отпуска</h2>
+            <div class="modal-body">
+                <div class="modal-form">
+                    <label for="vacation-year-select">Год:</label>
+                    <select id="vacation-year-select">
+                        {% for year in range(2020, 2031) %}
+                        <option value="{{ year }}" {% if year == current_year %}selected{% endif %}>{{ year }}</option>
+                        {% endfor %}
+                    </select>
+                    <button class="hover-effect-window" onclick="fetchVacationData()"><i class="fas fa-download"></i> Получить данные</button>
+                </div>
+                <div id="vacation-content" class="pdf-container" style="display:none; margin-top: 15px;">
+                    <!-- PDF будет загружен сюда -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Обычные модальные окна (без автоматического размера) -->
+    <div id="modal-familiarization" class="modal" style="display:none;">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('modal-familiarization')">&times;</span>
+            <h2><i class="fas fa-eye"></i> Лист ознакомления</h2>
+            <table id="documents-table">
+                <thead>
+                    <tr>
+                        <th>Документ</th>
+                        <th>Дата получения</th>
+                        <th>Ознакомлен</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td colspan="3">Нет документов на ознакомление</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div id="modal-signature" class="modal" style="display:none;">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('modal-signature')">&times;</span>
+            <h2><i class="fas fa-signature"></i> Подписание документов</h2>
+            <table id="signature-documents-table">
+                <thead>
+                    <tr>
+                        <th>Документ</th>
+                        <th>Дата получения</th>
+                        <th>Подписать</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td colspan="3">Нет документов для подписания</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div id="modal-applications" class="modal" style="display:none;">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('modal-applications')">&times;</span>
+            <h2><i class="fas fa-edit"></i> Заявления и служебные записки</h2>
+            <div class="tab">
+                <button class="tablinks active" onclick="openTab(event, 'applications')">Заявления</button>
+                <button class="tablinks" onclick="openTab(event, 'memos')">Служебные записки</button>
+            </div>
+
+            <div id="applications" class="tabcontent">
+                <h3>Заявления</h3>
+                <table id="applications-table">
+                    <thead>
+                        <tr>
+                            <th>Название</th>
+                            <th>Дата подачи</th>
+                            <th>Статус</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td colspan="3">Нет заявлений</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div id="memos" class="tabcontent" style="display:none;">
+                <h3>Служебные записки</h3>
+                <table id="memos-table">
+                    <thead>
+                        <tr>
+                            <th>Название</th>
+                            <th>Дата подачи</th>
+                            <th>Статус</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td colspan="3">Нет служебных записок</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div id="modal-certificate" class="modal" style="display:none;">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('modal-certificate')">&times;</span>
+            <h2><i class="fas fa-certificate"></i> Заказ справки</h2>
+            <div class="modal-form">
+                <p>Функционал находится в разработке</p>
+                <button class="hover-effect-window" onclick="closeModal('modal-certificate')"><i class="fas fa-times"></i> Закрыть</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Текущая дата для предзаполнения
+    const now = new Date();
+    const currentYear = now.getFullYear();
+    const currentMonth = now.getMonth() + 1;
+    let currentPdfUrl = null;
+    let currentFilename = null;
+
+    // Массив выбранных товаров для заказа
+    let orderProducts = [];
+
+    // Переключение вкладок профиля
+    document.addEventListener('DOMContentLoaded', function() {
+        // Инициализация вкладок профиля
+        const profileTabs = document.querySelectorAll('.profile-tab');
+        const profileTabContents = document.querySelectorAll('.profile-tab-content');
+        
+        profileTabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                const targetTab = tab.getAttribute('data-tab');
+                
+                // Убираем активный класс у всех вкладок и контента
+                profileTabs.forEach(t => t.classList.remove('active'));
+                profileTabContents.forEach(content => content.classList.remove('active'));
+                
+                // Добавляем активный класс текущей вкладке и контенту
+                tab.classList.add('active');
+                document.getElementById(targetTab).classList.add('active');
+                
+                // Если активирована вкладка покупок, инициализируем её
+                if (targetTab === 'purchase') {
+                    initPurchaseTab();
+                }
+            });
+        });
+
+        // Инициализация вкладки покупок при первом открытии
+        if (document.getElementById('purchase').classList.contains('active')) {
+            initPurchaseTab();
+        }
+
+        // Инициализация текущей даты в селектах
+        document.getElementById('year-select').value = currentYear;
+        document.getElementById('month-select').value = currentMonth;
+        document.getElementById('vacation-year-select').value = currentYear;
+        document.getElementById('timesheet-year-select').value = currentYear;
+        document.getElementById('timesheet-month-select').value = currentMonth;
+
+        // Обработчик кнопки обновления
+        const refreshButton = document.querySelector('.refresh-button');
+        if (refreshButton) {
+            refreshButton.addEventListener('click', function() {
+                const icon = this.querySelector('i');
+                
+                // Блокируем кнопку на время анимации
+                this.disabled = true;
+                icon.classList.add('rotating');
+                
+                // Обновляем страницу после завершения анимации
+                setTimeout(() => {
+                    icon.classList.remove('rotating');
+                    this.disabled = false;
+                    location.reload(true);
+                }, 500);
+            });
+        }
+
+        // Обработчик выхода
+        const logoutButton = document.getElementById('logoutButton');
+        if (logoutButton && !isWebClient()) {
+            logoutButton.href = "#";
+            logoutButton.addEventListener('click', function(e) {
+                e.preventDefault();
+                fetch('/logout?redirect=card')
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.redirect === 'login_by_card') {
+                            window.location.href = '/login_by_card';
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Logout error:', error);
+                        window.location.href = '/login_by_card';
+                    });
+            });
+        }
+
+        // Автоматическое обновление размеров при изменении размера окна
+        window.addEventListener('resize', updatePdfModalSizes);
+    });
+
+    // Инициализация вкладки приобретения продукции
+    function initPurchaseTab() {
+        // Переключение вкладок покупок
+        const purchaseTabs = document.querySelectorAll('.purchase-tab');
+        const purchaseTabContents = document.querySelectorAll('.purchase-tab-content');
+        
+        purchaseTabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                activatePurchaseTab(tab.id);
+            });
+        });
+
+        // Загрузка данных для вкладок
+        loadPurchaseData('/api/new_products', 'new-products-body', 'Новая продукция отсутствует');
+        loadPurchaseData('/api/discount_products', 'discount-products-body', 'Уцененная продукция отсутствует');
+        
+        // Инициализация вкладки заказа
+        initOrderTab();
+    }
+
+    // Активация вкладки покупок
+    function activatePurchaseTab(tabId) {
+        const purchaseTabs = document.querySelectorAll('.purchase-tab');
+        const purchaseTabContents = document.querySelectorAll('.purchase-tab-content');
+        
+        purchaseTabs.forEach(t => {
+            const selected = (t.id === tabId);
+            t.classList.toggle('active', selected);
+            t.setAttribute('aria-selected', selected);
+            t.tabIndex = selected ? 0 : -1;
+        });
+        
+        purchaseTabContents.forEach(content => {
+            content.classList.toggle('active', content.id === tabId.replace('-btn',''));
+        });
+    }
+
+    // Загрузка данных для вкладок покупок
+    function loadPurchaseData(url, tbodyId, emptyMessage = 'Нет данных') {
+        const tbody = document.getElementById(tbodyId);
+        tbody.innerHTML = '<tr><td colspan="7" class="purchase-loading"><i class="fas fa-spinner fa-spin"></i> Загрузка данных...</td></tr>';
+        
+        // Имитация загрузки данных с сервера
+        setTimeout(() => {
+            // В реальном приложении здесь будет fetch запрос
+            const mockData = [
+                { id: 1, product: "Ноутбук Dell", description: "Игровой ноутбук", arrival_date: "15.01.2024", amount: 5, price: 75000 },
+                { id: 2, product: "Монитор Samsung", description: "27 дюймов, 4K", arrival_date: "20.01.2024", amount: 3, price: 25000 },
+                { id: 3, product: "Клавиатура Logitech", description: "Механическая", arrival_date: "10.01.2024", amount: 10, price: 4500 },
+                { id: 4, product: "Мышь Razer", description: "Игровая мышь", arrival_date: "12.01.2024", amount: 8, price: 3500 }
+            ];
+            
+            if (tbodyId === 'discount-products-body') {
+                mockData.forEach(item => {
+                    item.discount_date = item.arrival_date;
+                    item.price = Math.round(item.price * 0.7); // 30% скидка
+                });
+            }
+            
+            displayPurchaseData(mockData, tbodyId, emptyMessage);
+            
+            // Обновим товары для заказа (для демонстрации возьмем первые 2 товара)
+            if (tbodyId === 'new-products-body') {
+                updateOrderProducts(mockData.slice(0, 2));
+            }
+        }, 1000);
+    }
+
+    // Отображение данных покупок
+    function displayPurchaseData(data, tbodyId, emptyMessage) {
+        const tbody = document.getElementById(tbodyId);
+        
+        if (!data.length) {
+            tbody.innerHTML = `<tr><td colspan="7" class="purchase-empty"><i class="fas fa-info-circle"></i> ${emptyMessage}</td></tr>`;
+            return;
+        }
+        
+        tbody.innerHTML = '';
+        data.forEach(item => {
+            const tr = document.createElement('tr');
+            const dateLabel = tbodyId === 'new-products-body' ? 'Дата поступления' : 'Дата уценки';
+            const dateField = tbodyId === 'new-products-body' ? item.arrival_date : item.discount_date;
+            
+            tr.innerHTML = `
+                <td>${item.id}</td>
+                <td><strong>${item.product}</strong></td>
+                <td>${item.description || ''}</td>
+                <td>${dateField}</td>
+                <td><span class="amount-badge">${item.amount} шт.</span></td>
+                <td><span class="price-tag">${item.price} руб.</span></td>
+                <td>
+                    <button class="add-to-cart" onclick="addToOrder(${item.id}, '${item.product}', ${item.price}, ${item.amount})">
+                        <i class="fas fa-cart-plus"></i> В заказ
+                    </button>
+                </td>
+            `;
+            tbody.appendChild(tr);
+        });
+    }
+
+    // Добавление товара в заказ
+    function addToOrder(id, product, price, amount) {
+        const existingItem = orderProducts.find(item => item.id === id);
+        
+        if (existingItem) {
+            existingItem.amount += 1;
+        } else {
+            orderProducts.push({
+                id: id,
+                product: product,
+                price: price,
+                amount: 1
+            });
+        }
+        
+        renderOrderTable();
+        
+        // Показать уведомление
+        showNotification(`Товар "${product}" добавлен в заказ!`);
+    }
+
+    // Показать уведомление
+    function showNotification(message) {
+        const notification = document.createElement('div');
+        notification.className = 'notification';
+        notification.innerHTML = `
+            <i class="fas fa-check-circle"></i>
+            <span>${message}</span>
+        `;
+        
+        document.body.appendChild(notification);
+        
+        // Анимация появления
+        setTimeout(() => notification.classList.add('show'), 100);
+        
+        // Автоматическое скрытие
+        setTimeout(() => {
+            notification.classList.remove('show');
+            setTimeout(() => notification.remove(), 300);
+        }, 3000);
+    }
+
+    // Рендер таблицы заказа
+    function renderOrderTable() {
+        const tbody = document.getElementById('order-tbody');
+        tbody.innerHTML = '';
+        
+        if (orderProducts.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="5" class="purchase-empty"><i class="fas fa-info-circle"></i> Пока нет выбранных товаров</td></tr>';
+            document.getElementById('order-total').textContent = '0.00 руб.';
+            return;
+        }
+        
+        let total = 0;
+        orderProducts.forEach(item => {
+            const sum = item.price * item.amount;
+            total += sum;
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td>${item.id}</td>
+                <td>${item.product}</td>
+                <td>${item.price} руб.</td>
+                <td>
+                    <div class="quantity-controls">
+                        <button class="qty-btn" onclick="changeQuantity(${item.id}, -1)">-</button>
+                        <span class="qty-display">${item.amount}</span>
+                        <button class="qty-btn" onclick="changeQuantity(${item.id}, 1)">+</button>
+                    </div>
+                </td>
+                <td><strong>${sum.toFixed(2)} руб.</strong></td>
+            `;
+            tbody.appendChild(tr);
+        });
+        
+        document.getElementById('order-total').textContent = `${total.toFixed(2)} руб.`;
+    }
+
+    // Изменение количества товара
+    function changeQuantity(id, delta) {
+        const item = orderProducts.find(item => item.id === id);
+        if (item) {
+            item.amount += delta;
+            if (item.amount <= 0) {
+                orderProducts = orderProducts.filter(item => item.id !== id);
+            }
+            renderOrderTable();
+        }
+    }
+
+    // Обновление товаров для заказа
+    function updateOrderProducts(products) {
+        orderProducts = products.map(p => ({
+            id: p.id,
+            product: p.product,
+            price: p.price,
+            amount: 1 // Начинаем с 1 штуки
+        }));
+        renderOrderTable();
+    }
+    
+    // Генерация номера заказа
+    function generateOrderNumber() {
+        const now = new Date();
+        const pad = (n) => n.toString().padStart(2, '0');
+        const dateStr = `${now.getFullYear()}${pad(now.getMonth()+1)}${pad(now.getDate())}${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}`;
+        const rand = Math.floor(1000 + Math.random() * 9000);
+        return `${dateStr}-${rand}`;
+    }
+    
+    // Инициализация вкладки "Оформление заказа"
+    function initOrderTab() {
+        // Заглушка для номера карты
+        document.getElementById('user-card').textContent = "•••• •••• •••• " + (Math.floor(Math.random() * 9000) + 1000);
+        
+        const orderNumber = generateOrderNumber();
+        document.getElementById('order-number').textContent = orderNumber;
+        
+        // Обработчик кнопки подтверждения
+        document.getElementById('confirm-order').onclick = () => {
+            if (orderProducts.length === 0) {
+                showMessage('Нет выбранных товаров для оформления заказа.', 'error');
+                return;
+            }
+            
+            const paymentMethod = document.getElementById('payment-method').value;
+            let total = 0;
+            orderProducts.forEach(item => total += item.price * item.amount);
+            
+            // Имитация отправки заказа
+            showMessage('<i class="fas fa-spinner fa-spin"></i> Оформление заказа...', 'info');
+            
+            setTimeout(() => {
+                // В реальном приложении здесь будет fetch запрос
+                showMessage(`Заказ №${orderNumber} успешно оформлен! Сумма: ${total.toFixed(2)} руб.`, 'success');
+                
+                // Очистка заказа после успешного оформления
+                setTimeout(() => {
+                    orderProducts = [];
+                    renderOrderTable();
+                    document.getElementById('order-message').innerHTML = '';
+                }, 3000);
+            }, 2000);
+        };
+        
+        // Обработчик кнопки отмены
+        document.getElementById('cancel-order').onclick = () => {
+            if (orderProducts.length === 0) {
+                showMessage('Нет активного заказа для отмены.', 'info');
+                return;
+            }
+            
+            if (confirm('Вы уверены, что хотите отменить текущий заказ?')) {
+                orderProducts = [];
+                renderOrderTable();
+                showMessage('Заказ отменен.', 'info');
+            }
+        };
+    }
+
+    // Показать сообщение
+    function showMessage(text, type = 'info') {
+        const messageEl = document.getElementById('order-message');
+        messageEl.innerHTML = text;
+        messageEl.className = `order-message ${type}`;
+    }
+
+    // Существующие функции для модальных окон
+    function showModal(modalId) {
+        const modals = document.querySelectorAll('.modal');
+        modals.forEach(modal => {
+            modal.style.display = 'none';
+        });
+
+        const modalElement = document.getElementById('modal-' + modalId);
+        if (modalElement) {
+            modalElement.style.display = 'block';
+            
+            setTimeout(() => {
+                modalElement.classList.add('modal-open');
+            }, 10);
+            
+            document.body.style.overflow = 'hidden';
+            document.body.style.position = 'fixed';
+            document.body.style.width = '100%';
+            
+            // Автоматическое обновление размеров для PDF модальных окон
+            if (modalElement.classList.contains('modal-pdf-auto')) {
+                setTimeout(updatePdfModalSizes, 50);
+            }
+        }
+    }
+
+    function closeModal(modalId) {
+        const modalElement = document.getElementById(modalId);
+        if (modalElement) {
+            modalElement.classList.remove('modal-open');
+            
+            setTimeout(() => {
+                modalElement.style.display = 'none';
+                
+                document.body.style.overflow = 'auto';
+                document.body.style.position = 'static';
+                
+                if (currentPdfUrl) {
+                    URL.revokeObjectURL(currentPdfUrl);
+                    currentPdfUrl = null;
+                    currentFilename = null;
+                }
+            }, 200);
+        }
+    }
+
+    // Функция для определения типа клиента
+    function isWebClient() {
+        const userAgent = navigator.userAgent.toLowerCase();
+        return !userAgent.includes('qtwebengine');
+    }
+
+    // Автоматическое обновление размеров PDF модальных окон
+    function updatePdfModalSizes() {
+        const pdfModals = document.querySelectorAll('.modal-pdf-auto .modal-content');
+        const windowHeight = window.innerHeight;
+        const windowWidth = window.innerWidth;
+        
+        pdfModals.forEach(modalContent => {
+            // Для PDF модальных окон устанавливаем практически полноэкранный размер
+            modalContent.style.width = '98%';
+            modalContent.style.maxWidth = '98%';
+            modalContent.style.height = '98vh';
+            modalContent.style.maxHeight = '98vh';
+            
+            // Для очень маленьких экранов
+            if (windowWidth < 768) {
+                modalContent.style.width = '99%';
+                modalContent.style.maxWidth = '99%';
+                modalContent.style.height = '99vh';
+                modalContent.style.maxHeight = '99vh';
+                modalContent.style.padding = '10px';
+            }
+            
+            if (windowWidth < 480) {
+                modalContent.style.width = '100%';
+                modalContent.style.maxWidth = '100%';
+                modalContent.style.height = '100vh';
+                modalContent.style.maxHeight = '100vh';
+                modalContent.style.padding = '5px';
+                modalContent.style.borderRadius = '0';
+            }
+        });
+        
+        // Обновляем размеры PDF контейнеров
+        updatePdfContainers();
+    }
+
+    // Обновление размеров PDF контейнеров
+    function updatePdfContainers() {
+        const pdfContainers = document.querySelectorAll('.pdf-container');
+        const windowHeight = window.innerHeight;
+        
+        pdfContainers.forEach(container => {
+            // Устанавливаем высоту PDF контейнера в зависимости от размера окна
+            if (windowHeight < 600) {
+                container.style.height = '85vh';
+            } else if (windowHeight < 768) {
+                container.style.height = '88vh';
+            } else {
+                container.style.height = '90vh';
+            }
+            
+            const iframe = container.querySelector('iframe');
+            if (iframe) {
+                iframe.style.width = '100%';
+                iframe.style.height = '100%';
+                iframe.style.minHeight = '500px';
+            }
+        });
+    }
+
+    // Функции для работы с PDF
+    function fetchData() {
+        const year = document.getElementById('year-select').value;
+        const month = document.getElementById('month-select').value;
+        
+        // Показываем индикатор загрузки
+        document.getElementById('payslip-content').innerHTML = `
+            <div class="loading-indicator">
+                <p>Загрузка данных за ${month}/${year}...</p>
+                <div class="loader"></div>
+            </div>
+        `;
+        
+        // Открываем окно с результатом
+        showModal('payslip-result');
+        
+        // Отправляем запрос на сервер
+        fetch('/api/get_payslip', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                year: year,
+                month: month
+            }),
+            credentials: 'include'
+        })
+        .then(response => {
+            if (!response.ok) {
+                return response.text().then(text => {
+                    throw new Error(text || `Ошибка сервера: ${response.status}`);
+                });
+            }
+            return response.blob();
+        })
+        .then(blob => {
+            displayPdfInModal(blob, 'payslip-content', `payslip_${year}_${month}.pdf`);
+        })
+        .catch(error => {
+            console.error('Ошибка:', error);
+            document.getElementById('payslip-content').innerHTML = `
+                <div class="error-message">
+                    <p>Ошибка при получении данных за ${month}/${year}</p>
+                    <p>${error.message}</p>
+                    <button class="hover-effect-window" onclick="showModal('calculation')">Попробовать снова</button>
+                </div>
+            `;
+        });
+    }
+
+    function fetchVacationData() {
+        const year = document.getElementById('vacation-year-select').value;
+        const vacationContent = document.getElementById('vacation-content');
+        const vacationForm = document.querySelector('#modal-vacation .modal-form');
+        
+        // Показываем индикатор загрузки
+        vacationContent.innerHTML = `
+            <div class="loading-indicator">
+                <p>Загрузка данных отпусков за ${year}...</p>
+                <div class="loader"></div>
+            </div>
+        `;
+        vacationContent.style.display = 'block';
+        
+        // Скрываем форму выбора
+        if (vacationForm) {
+            vacationForm.style.display = 'none';
+        }
+        
+        // Отправляем запрос на сервер
+        fetch('/api/get_vacations', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                year: year
+            }),
+            credentials: 'include'
+        })
+        .then(response => {
+            if (!response.ok) {
+                return response.text().then(text => {
+                    throw new Error(text || `Ошибка сервера: ${response.status}`);
+                });
+            }
+            return response.blob();
+        })
+        .then(blob => {
+            displayPdfInModal(blob, 'vacation-content', `vacations_${year}.pdf`);
+            
+            // Добавляем кнопку для возврата к выбору года
+            const actionsDiv = document.createElement('div');
+            actionsDiv.className = 'modal-actions';
+            actionsDiv.innerHTML = `
+                <button class="hover-effect-window" onclick="resetVacationModal()">Выбрать другой год</button>
+            `;
+            
+            // Вставляем кнопки после контейнера с PDF
+            vacationContent.parentNode.appendChild(actionsDiv);
+        })
+        .catch(error => {
+            console.error('Ошибка:', error);
+            vacationContent.innerHTML = `
+                <div class="error-message">
+                    <p>Ошибка при получении данных отпусков за ${year}</p>
+                    <p>${error.message}</p>
+                    <button class="hover-effect-window" onclick="resetVacationModal()">Попробовать снова</button>
+                </div>
+            `;
+        });
+    }
+
+    function resetVacationModal() {
+        const vacationContent = document.getElementById('vacation-content');
+        const vacationForm = document.querySelector('#modal-vacation .modal-form');
+        const actions = document.querySelector('#modal-vacation .modal-actions');
+        
+        vacationContent.innerHTML = '';
+        vacationContent.style.display = 'none';
+        
+        if (vacationForm) {
+            vacationForm.style.display = 'block';
+        }
+        
+        if (actions) {
+            actions.remove();
+        }
+        
+        if (currentPdfUrl) {
+            URL.revokeObjectURL(currentPdfUrl);
+            currentPdfUrl = null;
+            currentFilename = null;
+        }
+    }
+
+    function fetchTimesheetData() {
+        const year = document.getElementById('timesheet-year-select').value;
+        const month = document.getElementById('timesheet-month-select').value;
+        
+        // Показываем индикатор загрузки
+        document.getElementById('timesheet-content').innerHTML = `
+            <div class="loading-indicator">
+                <p>Загрузка графика работы за ${month}/${year}...</p>
+                <div class="loader"></div>
+            </div>
+        `;
+        
+        // Открываем окно с результатом
+        showModal('timesheet-result');
+        
+        // Отправляем запрос на сервер
+        fetch('/api/get_timesheet', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                year: year,
+                month: month
+            }),
+            credentials: 'include'
+        })
+        .then(response => {
+            const contentType = response.headers.get('content-type');
+            
+            if (contentType && contentType.includes('application/json')) {
+                return response.json().then(data => {
+                    if (data.error) {
+                        throw new Error(data.message || data.error);
+                    } else if (data.info) {
+                        throw new Error(data.message || data.info);
+                    } else {
+                        throw new Error('Неизвестный ответ от сервера');
+                    }
+                });
+            }
+            
+            if (!response.ok) {
+                return response.text().then(text => {
+                    throw new Error(text || `Ошибка сервера: ${response.status}`);
+                });
+            }
+            return response.blob();
+        })
+        .then(blob => {
+            displayPdfInModal(blob, 'timesheet-content', `timesheet_${year}_${month}.pdf`);
+        })
+        .catch(error => {
+            console.error('Ошибка:', error);
+            document.getElementById('timesheet-content').innerHTML = `
+                <div class="error-message">
+                    <p>Ошибка при получении графика работы за ${month}/${year}</p>
+                    <p>${error.message}</p>
+                    <button class="hover-effect-window" onclick="showModal('timesheet')">Попробовать снова</button>
+                </div>
+            `;
+        });
+    }
+
+    function displayPdfInModal(blob, containerId, filename) {
+        if (currentPdfUrl) {
+            URL.revokeObjectURL(currentPdfUrl);
+        }
+        
+        currentPdfUrl = URL.createObjectURL(blob);
+        currentFilename = filename;
+        const container = document.getElementById(containerId);
+        
+        const iframe = document.createElement('iframe');
+        iframe.src = currentPdfUrl;
+        iframe.className = 'pdf-viewer';
+        iframe.style.width = '100%';
+        iframe.style.height = '100%';
+        iframe.style.border = 'none';
+        iframe.style.borderRadius = '5px';
+        
+        container.innerHTML = '';
+        container.appendChild(iframe);
+        
+        // Обновляем размеры после загрузки PDF
+        setTimeout(updatePdfModalSizes, 100);
+        
+        iframe.onload = function() {
+            updatePdfModalSizes();
+        };
+    }
+
+    // Вспомогательные функции
+    function openTab(evt, tabName) {
+        const tabcontents = document.querySelectorAll('.tabcontent');
+        tabcontents.forEach(tabcontent => {
+            tabcontent.style.display = 'none';
+        });
+
+        const tablinks = document.querySelectorAll('.tablinks');
+        tablinks.forEach(tablink => {
+            tablink.classList.remove('active');
+        });
+
+        document.getElementById(tabName).style.display = 'block';
+        evt.currentTarget.classList.add('active');
+    }
+
+    function confirmFamiliarization(documentId) {
+        console.log(`Документ с ID ${documentId} отмечен как ознакомленный.`);
+    }
+
+    function confirmSignature(documentId) {
+        console.log(`Документ с ID ${documentId} подписан.`);
+    }
+
+    // Закрытие модального окна при клике вне его
+    window.addEventListener('click', function(event) {
+        const modals = document.querySelectorAll('.modal');
+        modals.forEach(modal => {
+            if (event.target === modal) {
+                closeModal(modal.id);
+            }
+        });
+    });
+
+    // Закрытие по клавише Escape
+    document.addEventListener('keydown', function(event) {
+        if (event.key === 'Escape') {
+            const openModals = document.querySelectorAll('.modal[style*="display: block"]');
+            openModals.forEach(modal => {
+                closeModal(modal.id);
+            });
+        }
+    });
+</script>
+
+<style>
+    /* Основные стили - Газпром бело-голубая палитра */
+    body {
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        margin: 0;
+        padding: 0;
+        background: linear-gradient(135deg, #00a0e3 0%, #0057b8 100%) !important;
+        min-height: 100vh;
+    }
+
+    .container {
+        max-width: 1400px;
+        margin: 20px auto;
+        background: white;
+        padding: 30px;
+        border-radius: 15px;
+        box-shadow: 0 15px 35px rgba(0, 87, 184, 0.2);
+        backdrop-filter: blur(10px);
+        border: 1px solid #e1f5fe;
+    }
+
+    .profile-container {
+        display: grid;
+        gap: 25px;
+    }
+
+    /* Стили для заголовка */
+    .header-section {
+        text-align: center;
+        border-bottom: 3px solid #00a0e3;
+        padding-bottom: 25px;
+        position: relative;
+        background: linear-gradient(135deg, #f8fdff 0%, #eeecec 100%);
+        padding: 30px;
+        border-radius: 12px;
+        box-shadow: 0 5px 20px rgba(0, 160, 227, 0.15);
+    }
+
+    .header-section h1 {
+        color: #0057b8;
+        margin: 0;
+        margin-top: 10px;
+        font-size: 2.5em;
+        font-weight: 700;
+        text-shadow: 0 2px 4px rgba(0, 87, 184, 0.1);
+    }
+
+    .status-indicators {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 20px;
+        margin-top: 20px;
+        flex-wrap: wrap;
+    }
+
+    .status-indicators > .status,
+    .status-indicators > .refresh-button,
+    .status-indicators > .logout-button {
+        font-family: 'Segoe UI', sans-serif;
+        font-weight: 600;
+        font-size: 1rem;
+        height: 45px;
+        line-height: 45px;
+        padding: 0 25px;
+        border-radius: 25px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        user-select: none;
+        white-space: nowrap;
+        min-width: 200px;
+        text-align: center;
+        box-sizing: border-box;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 15px rgba(0, 87, 184, 0.2);
+    }
+
+    .status-indicators > .status {
+        color: white;
+        background: linear-gradient(135deg, #00a0e3, #0077c8);
+    }
+
+    .status-indicators > .status.inactive {
+        background: linear-gradient(135deg, #ff6b6b, #ee5a52);
+    }
+
+    .status-indicators > .logout-button {
+        background: linear-gradient(135deg, #ff6b6b, #ee5a52);
+        color: white;
+        text-decoration: none;
+        transition: all 0.3s ease;
+    }
+
+    .status-indicators > .logout-button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(255, 107, 107, 0.4);
+    }
+
+    .status-indicators > .refresh-button {
+        background: linear-gradient(135deg, #0057b8, #00a0e3);
+        color: white;
+        border: none;
+        transition: all 0.3s ease;
+    }
+
+    .status-indicators > .refresh-button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(0, 87, 184, 0.4);
+    }
+
+    .status-indicators > .refresh-button i {
+        margin-right: 8px;
+        transition: transform 0.5s ease;
+    }
+
+    .status-indicators > .refresh-button:hover i {
+        transform: rotate(360deg);
+    }
+
+    /* Стили для вкладок профиля */
+    .profile-tabs {
+        display: flex;
+        margin: 20px 0;
+        border-bottom: 3px solid #0057b8;
+        background: rgb(243, 243, 243);
+        border-radius: 12px;
+        padding: 8px;
+        box-shadow: 0 5px 15px rgba(0, 160, 227, 0.1);
+    }
+
+    .profile-tab {
+        padding: 15px 30px;
+        background: transparent;
+        border: none;
+        border-bottom: 3px solid transparent;
+        cursor: pointer;
+        font-weight: 600;
+        color: #607d8b;
+        transition: all 0.3s ease;
+        border-radius: 8px;
+        margin: 0 5px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-size: 1.1em;
+    }
+
+    .profile-tab:hover {
+        background: #e9e8e7;
+        color: #0057b8;
+        transform: translateY(-2px);
+    }
+
+    .profile-tab.active {
+        background: linear-gradient(135deg, #0057b8, #00a0e3);
+        color: white;
+        border-bottom: 3px solid #0057b8;
+        box-shadow: 0 5px 15px rgba(0, 87, 184, 0.3);
+    }
+
+    .profile-tab-content {
+        display: none;
+        animation: fadeIn 0.5s ease;
+    }
+
+    .profile-tab-content.active {
+        display: block;
+    }
+
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Стили для информационных блоков */
+    .personal-info {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 25px;
+        margin-bottom: 25px;
+    }
+
+    @media (max-width: 968px) {
+        .personal-info {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    .info-block {
+        background: linear-gradient(135deg, #ffffff 0%, #f8fdff 100%);
+        padding: 25px;
+        border-radius: 12px;
+        border: 1px solid #e1f5fe;
+        box-shadow: 0 8px 25px rgba(0, 160, 227, 0.08);
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .info-block::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+        background: linear-gradient(135deg, #0057b8, #00a0e3);
+    }
+
+    .info-block:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 12px 30px rgba(0, 160, 227, 0.15);
+    }
+
+    .info-block h2 {
+        color: #0057b8;
+        margin-top: 0;
+        margin-bottom: 20px;
+        font-size: 1.4em;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        border-bottom: 2px solid #e1f5fe;
+        padding-bottom: 12px;
+    }
+
+    dl {
+        display: grid;
+        grid-template-columns: max-content 1fr;
+        gap: 18px 25px;
+    }
+
+    @media (max-width: 768px) {
+        dl {
+            grid-template-columns: 1fr;
+            gap: 15px;
+        }
+    }
+
+    dt {
+        font-weight: 600;
+        color: #455a64;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    dd {
+        margin: 0;
+        color: #0057b8;
+        font-weight: 500;
+    }
+
+    /* Стили для фотографии */
+    .photo-preview {
+        width: 120px;
+        height: 120px;
+        border-radius: 12px;
+        object-fit: cover;
+        border: 3px solid #00a0e3;
+        box-shadow: 0 5px 15px rgba(0, 160, 227, 0.2);
+    }
+
+    .photo-placeholder {
+        width: 120px;
+        height: 120px;
+        background: linear-gradient(135deg, #0057b8, #00a0e3);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 48px;
+        color: white;
+        border-radius: 12px;
+        box-shadow: 0 5px 15px rgba(0, 160, 227, 0.2);
+    }
+
+    /* Стили для отпуска */
+    .vacation-days {
+        background: linear-gradient(135deg, #00a0e3, #0077c8);
+        color: white;
+        padding: 5px 15px;
+        border-radius: 20px;
+        font-weight: 600;
+    }
+
+    .vacation-date {
+        color: #0057b8;
+        font-weight: 600;
+    }
+
+    .vacation-count {
+        background: linear-gradient(135deg, #0057b8, #00a0e3);
+        color: white;
+        padding: 5px 15px;
+        border-radius: 20px;
+        font-weight: 600;
+    }
+
+    .wrap-vacation {
+        display: grid;
+        grid-template-columns: 1fr auto;
+        align-items: center;
+        gap: 15px;
+    }
+
+    .vacation {
+        width: 80px;
+        height: 80px;
+        margin-left: 0;
+        margin-top: 0;
+        filter: drop-shadow(0 5px 15px rgba(0, 160, 227, 0.2));
+    }
+
+    /* Кнопки */
+    .hover-effect, .hover-effect-vacation {
+        background: linear-gradient(135deg, #0057b8, #00a0e3);
+        color: white;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        font-weight: 600;
+        box-shadow: 0 4px 15px rgba(0, 87, 184, 0.3);
+    }
+
+    .hover-effect {
+        padding: 12px 20px;
+        min-width: 160px;
+    }
+
+    .hover-effect-vacation {
+        padding: 12px;
+        width: 100%;
+    }
+
+    .hover-effect:hover, .hover-effect-vacation:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(0, 87, 184, 0.4);
+    }
+
+    /* История входов */
+    .access-log {
+        background: linear-gradient(135deg, #ffffff 0%, #f8fdff 100%);
+        padding: 25px;
+        border-radius: 12px;
+        border: 1px solid #e1f5fe;
+        box-shadow: 0 8px 25px rgba(0, 160, 227, 0.08);
+    }
+
+    .access-log h2 {
+        color: #0057b8;
+        margin-bottom: 20px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .access-log table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 15px;
+        background: white;
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 5px 15px rgba(0, 160, 227, 0.1);
+    }
+
+    .access-log th, .access-log td {
+        padding: 15px 20px;
+        text-align: left;
+        border-bottom: 1px solid #e1f5fe;
+    }
+
+    .access-log th {
+        background: linear-gradient(135deg, #0057b8, #00a0e3);
+        color: white;
+        font-weight: 600;
+    }
+
+    .access-log tr:nth-child(even) {
+        background-color: #f8fdff;
+    }
+
+    .access-log tr:hover {
+        background-color: #e1f5fe;
+    }
+
+    .no-data {
+        text-align: center;
+        color: #607d8b;
+        font-style: italic;
+    }
+
+    /* Стили для раздела приобретения продукции */
+    .purchase-container {
+        background: white;
+        border-radius: 12px;
+        padding: 0;
+        box-shadow: 0 8px 25px rgba(0, 160, 227, 0.08);
+        overflow: hidden;
+    }
+
+    .purchase-header {
+        background: linear-gradient(135deg, #0057b8, #00a0e3);
+        color: white;
+        padding: 30px;
+        text-align: center;
+    }
+
+    .purchase-header h2 {
+        margin: 0;
+        font-size: 2em;
+        font-weight: 700;
+    }
+
+    .purchase-header p {
+        margin: 10px 0 0 0;
+        opacity: 0.9;
+        font-size: 1.1em;
+    }
+
+    .purchase-tabs {
+        display: flex;
+        background: #e1f5fe;
+        padding: 0;
+        border-bottom: 2px solid #b3e5fc;
+    }
+
+    .purchase-tab {
+        padding: 18px 25px;
+        cursor: pointer;
+        font-weight: 600;
+        color: #607d8b;
+        border: none;
+        border-bottom: 3px solid transparent;
+        background: transparent;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-size: 1em;
+        flex: 1;
+        justify-content: center;
+    }
+
+    .purchase-tab:hover {
+        background: white;
+        color: #0057b8;
+    }
+
+    .purchase-tab.active {
+        background: white;
+        color: #0057b8;
+        border-bottom: 3px solid #0057b8;
+        box-shadow: 0 -2px 10px rgba(0, 87, 184, 0.1);
+    }
+
+    .purchase-tab-content {
+        display: none;
+        padding: 25px;
+        animation: fadeIn 0.5s ease;
+    }
+
+    .purchase-tab-content.active {
+        display: block;
+    }
+
+    /* Таблицы в разделе покупок */
+    .table-container {
+        background: white;
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 5px 15px rgba(0, 160, 227, 0.1);
+        margin-bottom: 20px;
+    }
+
+    .purchase-container table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 14px;
+    }
+
+    .purchase-container thead tr {
+        background: linear-gradient(135deg, #0057b8, #00a0e3);
+        color: white;
+    }
+
+    .purchase-container thead th {
+        padding: 16px 18px;
+        font-weight: 600;
+        text-align: left;
+    }
+
+    .purchase-container tbody tr {
+        transition: background-color 0.2s ease;
+        border-bottom: 1px solid #e1f5fe;
+    }
+
+    .purchase-container tbody tr:hover {
+        background-color: #f8fdff;
+    }
+
+    .purchase-container tbody td {
+        padding: 14px 18px;
+        vertical-align: middle;
+    }
+
+    /* Бейджи и теги */
+    .amount-badge {
+        background: #e1f5fe;
+        color: #0057b8;
+        padding: 5px 12px;
+        border-radius: 15px;
+        font-weight: 600;
+        font-size: 0.9em;
+    }
+
+    .price-tag {
+        background: linear-gradient(135deg, #00a0e3, #0077c8);
+        color: white;
+        padding: 6px 14px;
+        border-radius: 15px;
+        font-weight: 600;
+        font-size: 0.9em;
+    }
+
+    /* Кнопка добавления в корзину */
+    .add-to-cart {
+        background: linear-gradient(135deg, #0057b8, #00a0e3);
+        color: white;
+        border: none;
+        padding: 8px 16px;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        font-size: 0.9em;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-weight: 600;
+    }
+
+    .add-to-cart:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0, 87, 184, 0.4);
+    }
+
+    /* Стили для оформления заказа */
+    .order-summary {
+        max-width: 1000px;
+        margin: 0 auto;
+    }
+
+    .order-info-card {
+        background: linear-gradient(135deg, #f8fdff, #ffffff);
+        padding: 25px;
+        border-radius: 12px;
+        border: 2px solid #e1f5fe;
+        margin: 20px 0;
+        box-shadow: 0 5px 15px rgba(0, 160, 227, 0.1);
+    }
+
+    .order-info-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 10px 0;
+        border-bottom: 1px solid #e1f5fe;
+    }
+
+    .order-info-item:last-child {
+        border-bottom: none;
+    }
+
+    .order-number {
+        color: #0057b8;
+        font-weight: 700;
+        font-size: 1.1em;
+    }
+
+    .order-total-card {
+        background: linear-gradient(135deg, #0057b8, #00a0e3);
+        color: white;
+        padding: 25px;
+        border-radius: 12px;
+        margin: 20px 0;
+        text-align: center;
+        box-shadow: 0 5px 15px rgba(0, 87, 184, 0.3);
+    }
+
+    .total-amount {
+        font-size: 1.5em;
+        font-weight: 700;
+    }
+
+    .total-price {
+        font-size: 1.8em;
+        margin-left: 10px;
+    }
+
+    .payment-section {
+        margin: 25px 0;
+    }
+
+    .payment-section label {
+        display: block;
+        margin-bottom: 12px;
+        font-weight: 600;
+        color: #0057b8;
+        font-size: 1.1em;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .payment-select {
+        width: 100%;
+        padding: 15px;
+        border: 2px solid #e1f5fe;
+        border-radius: 8px;
+        font-size: 1em;
+        background: white;
+        transition: all 0.3s ease;
+    }
+
+    .payment-select:focus {
+        border-color: #0057b8;
+        box-shadow: 0 0 0 3px rgba(0, 87, 184, 0.1);
+        outline: none;
+    }
+
+    /* Кнопки в разделе покупок */
+    .purchase-buttons {
+        display: flex;
+        gap: 20px;
+        margin: 30px 0;
+    }
+
+    .confirm-button, .cancel-button {
+        flex: 1;
+        padding: 18px;
+        border: none;
+        border-radius: 10px;
+        font-weight: 600;
+        font-size: 1.1em;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        box-shadow: 0 4px 15px rgba(0, 87, 184, 0.2);
+    }
+
+    .confirm-button {
+        background: linear-gradient(135deg, #00a0e3, #0077c8);
+        color: white;
+    }
+
+    .confirm-button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(0, 160, 227, 0.4);
+    }
+
+    .cancel-button {
+        background: linear-gradient(135deg, #ff6b6b, #ee5a52);
+        color: white;
+    }
+
+    .cancel-button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(255, 107, 107, 0.4);
+    }
+
+    /* Сообщения */
+    .purchase-loading, .purchase-error, .purchase-empty {
+        text-align: center;
+        padding: 40px 20px;
+        font-size: 1.1em;
+        color: #607d8b;
+    }
+
+    .purchase-error {
+        color: #ff6b6b;
+    }
+
+    .order-message {
+        padding: 15px 20px;
+        border-radius: 8px;
+        margin: 20px 0;
+        font-weight: 600;
+        text-align: center;
+    }
+
+    .order-message.success {
+        background: #e1f5fe;
+        color: #0057b8;
+        border: 1px solid #b3e5fc;
+    }
+
+    .order-message.error {
+        background: #ffebee;
+        color: #c62828;
+        border: 1px solid #ffcdd2;
+    }
+
+    .order-message.info {
+        background: #e1f5fe;
+        color: #0057b8;
+        border: 1px solid #b3e5fc;
+    }
+
+    /* Управление количеством */
+    .quantity-controls {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .qty-btn {
+        background: #0057b8;
+        color: white;
+        border: none;
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        transition: all 0.3s ease;
+    }
+
+    .qty-btn:hover {
+        background: #0047a0;
+        transform: scale(1.1);
+    }
+
+    .qty-display {
+        font-weight: 600;
+        min-width: 30px;
+        text-align: center;
+    }
+
+    /* Уведомления */
+    .notification {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: linear-gradient(135deg, #00a0e3, #0077c8);
+        color: white;
+        padding: 15px 25px;
+        border-radius: 8px;
+        box-shadow: 0 5px 15px rgba(0, 87, 184, 0.3);
+        z-index: 10000;
+        transform: translateX(400px);
+        opacity: 0;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-weight: 600;
+    }
+
+    .notification.show {
+        transform: translateX(0);
+        opacity: 1;
+    }
+
+    /* Стили для модальных окон */
+    .modal {
+        display: none;
+        position: fixed;
+        z-index: 1000;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        overflow: auto;
+        background: rgba(0, 87, 184, 0.8);
+        backdrop-filter: blur(5px);
+        animation: fadeIn 0.3s ease;
+    }
+
+    /* ОБЫЧНЫЕ модальные окна (фиксированный размер) */
+    .modal-content {
+        background: linear-gradient(145deg, #ffffff 0%, #f8fdff 100%);
+        margin: auto;
+        padding: 25px;
+        border: none;
+        border-radius: 12px;
+        box-shadow: 0 20px 40px rgba(0, 87, 184, 0.4);
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        animation: slideIn 0.3s ease;
+        border: 1px solid #e1f5fe;
+        display: flex;
+        flex-direction: column;
+        
+        /* Фиксированный размер для обычных модальных окон */
+        width: 90%;
+        max-width: 600px;
+        max-height: 80vh;
+    }
+
+    /* PDF модальные окна с АВТОМАТИЧЕСКИМ РАЗМЕРОМ */
+    .modal-pdf-auto .modal-content {
+        width: 98%;
+        height: 98vh;
+        max-width: 98%;
+        max-height: 98vh;
+        padding: 15px;
+    }
+
+    .modal-body {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        min-height: 0;
+        overflow: hidden;
+    }
+
+    .close {
+        color: #0057b8;
+        float: right;
+        font-size: 32px;
+        font-weight: bold;
+        position: absolute;
+        top: 10px;
+        right: 15px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        line-height: 1;
+        z-index: 1001;
+        background: rgba(255, 255, 255, 0.9);
+        border-radius: 50%;
+        width: 40px;
+        height: 40px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 2px 8px rgba(0, 87, 184, 0.3);
+    }
+
+    .close:hover {
+        color: #00a0e3;
+        transform: scale(1.1);
+        background: white;
+    }
+
+    .hover-effect-window {
+        width: 100%;
+        height: 45px;
+        background: linear-gradient(135deg, #0057b8, #00a0e3);
+        color: white;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        font-size: 1em;
+        margin: 10px 0;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        box-shadow: 0 4px 15px rgba(0, 87, 184, 0.3);
+    }
+
+    .hover-effect-window:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(0, 87, 184, 0.4);
+    }
+
+    .modal-form {
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+        margin: 20px 0;
+    }
+
+    .modal-form label {
+        display: block;
+        margin-bottom: 5px;
+        font-weight: bold;
+        color: #0057b8;
+    }
+
+    .modal-form select {
+        padding: 10px 12px;
+        border: 1px solid #e1f5fe;
+        border-radius: 5px;
+        background-color: white;
+        font-size: 14px;
+        width: 100%;
+        box-shadow: inset 0 1px 3px rgba(0, 160, 227, 0.1);
+    }
+
+    /* PDF контейнеры - ПОЛНОЭКРАННЫЕ для PDF модальных окон */
+    .pdf-container {
+        width: 100%;
+        flex: 1;
+        border: 1px solid rgba(0, 160, 227, 0.3);
+        border-radius: 8px;
+        overflow: hidden;
+        position: relative;
+        background: white;
+        box-shadow: inset 0 1px 3px rgba(0, 160, 227, 0.1);
+        min-height: 500px;
+        height: 90vh;
+    }
+
+    .pdf-container iframe {
+        width: 100%;
+        height: 100%;
+        border: none;
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+    }
+
+    .modal-actions {
+        display: flex;
+        gap: 15px;
+        justify-content: center;
+        margin-top: 20px;
+        flex-wrap: wrap;
+        padding-top: 15px;
+        border-top: 1px solid #e1f5fe;
+    }
+
+    .modal-actions button {
+        padding: 10px 25px;
+        background: linear-gradient(135deg, #0057b8 0%, #00a0e3 100%);
+        color: white;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        font-size: 14px;
+        min-width: 120px;
+        box-shadow: 0 4px 6px rgba(0, 87, 184, 0.2);
+    }
+
+    .modal-actions button:hover {
+        background: linear-gradient(135deg, #0047a0 0%, #0088cc 100%);
+        transform: translateY(-2px);
+        box-shadow: 0 6px 12px rgba(0, 87, 184, 0.3);
+    }
+
+    .loading-indicator {
+        text-align: center;
+        padding: 40px 20px;
+        color: #0057b8;
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 100%;
+    }
+
+    .loading-indicator p {
+        margin-bottom: 20px;
+        font-size: 1.1em;
+    }
+
+    /* Стили для вкладок в модальных окнах */
+    .tab {
+        display: flex;
+        border-bottom: 1px solid #e1f5fe;
+        margin-bottom: 20px;
+        background: rgba(225, 245, 254, 0.5);
+        border-radius: 8px 8px 0 0;
+        padding: 5px;
+    }
+
+    .tab button {
+        background: linear-gradient(135deg, #f8fdff 0%, #e1f5fe 100%);
+        border: none;
+        outline: none;
+        cursor: pointer;
+        padding: 14px 16px;
+        transition: 0.3s;
+        font-size: 17px;
+        border-radius: 5px;
+        margin: 0 2px;
+        flex: 1;
+    }
+
+    .tab button:hover {
+        background: linear-gradient(135deg, #e1f5fe 0%, #b3e5fc 100%);
+    }
+
+    .tab button.active {
+        background: linear-gradient(135deg, #0057b8 0%, #00a0e3 100%);
+        color: white;
+        box-shadow: 0 2px 4px rgba(0, 87, 184, 0.2);
+    }
+
+    .tabcontent {
+        display: none;
+        padding: 6px 12px;
+        animation: fadeEffect 1s;
+        background: white;
+        border-radius: 0 0 8px 8px;
+        max-height: 60vh;
+        overflow-y: auto;
+    }
+
+    @keyframes fadeEffect {
+        from {opacity: 0;}
+        to {opacity: 1;}
+    }
+
+    /* Анимация вращения для кнопки обновления */
+    .rotating {
+        animation: rotate 0.5s linear;
+    }
+
+    @keyframes rotate {
+        from { transform: rotate(0deg); }
+        to { transform: rotate(360deg); }
+    }
+
+    /* Адаптивность для мобильных устройств */
+    @media (max-width: 768px) {
+        .container {
+            margin: 10px;
+            padding: 15px;
+        }
+
+        .personal-info {
+            grid-template-columns: 1fr;
+            gap: 15px;
+        }
+
+        .status-indicators {
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .status-indicators > .status,
+        .status-indicators > .refresh-button,
+        .status-indicators > .logout-button {
+            width: 100%;
+            min-width: auto;
+            font-size: 0.9em;
+            padding: 0 15px;
+        }
+
+        .profile-tabs {
+            flex-direction: column;
+        }
+
+        .profile-tab {
+            padding: 12px 20px;
+            font-size: 1em;
+        }
+
+        .purchase-tabs {
+            flex-direction: column;
+        }
+
+        .purchase-tab {
+            padding: 15px 20px;
+        }
+
+        .purchase-buttons {
+            flex-direction: column;
+        }
+
+        .order-info-item {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 5px;
+        }
+
+        .header-section h1 {
+            font-size: 1.8em;
+        }
+
+        /* Адаптивность для PDF модальных окон */
+        .modal-pdf-auto .modal-content {
+            width: 99% !important;
+            height: 99vh !important;
+            max-width: 99% !important;
+            max-height: 99vh !important;
+            padding: 10px;
+        }
+
+        .pdf-container {
+            height: 85vh;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .modal-content {
+            width: 95% !important;
+            max-width: 95% !important;
+            padding: 15px;
+        }
+        
+        .modal-pdf-auto .modal-content {
+            width: 100% !important;
+            height: 100vh !important;
+            max-width: 100% !important;
+            max-height: 100vh !important;
+            padding: 5px;
+            border-radius: 0;
+        }
+        
+        .close {
+            font-size: 24px;
+            top: 5px;
+            right: 10px;
+            width: 35px;
+            height: 35px;
+        }
+
+        .pdf-container {
+            height: 80vh;
+            border-radius: 4px;
+        }
+
+        .container {
+            margin: 5px;
+            padding: 10px;
+            border-radius: 8px;
+        }
+
+        .header-section {
+            padding: 20px 15px;
+        }
+
+        .header-section h1 {
+            font-size: 1.5em;
+        }
+    }
+
+    /* Анимации */
+    @keyframes slideIn {
+        from {
+            opacity: 0;
+            transform: translate(-50%, -60%);
+        }
+        to {
+            opacity: 1;
+            transform: translate(-50%, -50%);
+        }
+    }
+
+    /* Дополнительные стили для лучшего UX */
+    .modal-content::-webkit-scrollbar {
+        width: 8px;
+    }
+
+    .modal-content::-webkit-scrollbar-track {
+        background: #f1f1f1;
+        border-radius: 4px;
+    }
+
+    .modal-content::-webkit-scrollbar-thumb {
+        background: #0057b8;
+        border-radius: 4px;
+    }
+
+    .modal-content::-webkit-scrollbar-thumb:hover {
+        background: #0047a0;
+    }
+
+    /* Улучшенный лоадер */
+    .loader {
+        border: 3px solid #f3f3f3;
+        border-top: 3px solid #0057b8;
+        border-radius: 50%;
+        width: 40px;
+        height: 40px;
+        animation: spin 1s linear infinite;
+        margin: 0 auto;
+    }
+
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+
+    /* Сообщения об ошибках */
+    .error-message {
+        text-align: center;
+        padding: 30px 20px;
+        color: #ff6b6b;
+        background: #ffebee;
+        border-radius: 8px;
+        border: 1px solid #ffcdd2;
+    }
+
+    .error-message p {
+        margin-bottom: 15px;
+    }
+</style>
+{% endblock %}

@@ -1,0 +1,834 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Админ — настройки</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0b1220;
+            --panel: rgba(10, 20, 40, 0.92);
+            --panel-border: rgba(27, 108, 255, 0.3);
+            --text: #e2e8f0;
+            --muted: #94a3b8;
+            --accent: #33b7ff;
+            --accent-soft: rgba(51, 183, 255, 0.2);
+            --danger: #f87171;
+            --success: #4ade80;
+        }
+
+        * {
+            box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
+        }
+
+        body {
+            margin: 0;
+            background: radial-gradient(1000px 600px at 15% -10%, rgba(27,108,255,0.2) 0%, rgba(11,18,32,0) 60%),
+                        linear-gradient(135deg, #0b1220 0%, #0f172a 50%, #000814 120%);
+            color: var(--text);
+            min-height: 100vh;
+            padding: 32px 20px 40px;
+        }
+
+        .page {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .page-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+        }
+
+        .page-header h1 {
+            margin: 0;
+            font-size: clamp(22px, 3vw, 32px);
+            color: #e6f1ff;
+        }
+
+        .page-header p {
+            margin: 6px 0 0;
+            color: var(--muted);
+            font-size: 14px;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            background: rgba(10, 20, 40, 0.8);
+            border: 1px solid rgba(51, 183, 255, 0.4);
+            color: var(--text);
+            border-radius: 8px;
+            padding: 8px 14px;
+            font-size: 14px;
+            cursor: pointer;
+        }
+
+        .btn.primary {
+            background: rgba(51, 183, 255, 0.2);
+            border-color: rgba(51, 183, 255, 0.7);
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+            gap: 16px;
+        }
+
+        .card {
+            background: var(--panel);
+            border: 1px solid var(--panel-border);
+            border-radius: 16px;
+            padding: 16px 18px;
+            box-shadow: 0 18px 40px rgba(0, 0, 0, 0.35);
+            width: 100%;
+        }
+
+        .card h2 {
+            margin: 0 0 12px;
+            font-size: 16px;
+            color: #cfe3ff;
+        }
+
+        .status-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            padding: 8px 10px;
+            border-radius: 10px;
+            background: rgba(10, 20, 40, 0.6);
+            color: var(--muted);
+            font-size: 13px;
+            margin-bottom: 8px;
+        }
+
+        .status-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: var(--danger);
+        }
+
+        .status-dot.ok {
+            background: var(--success);
+        }
+
+        .settings-section {
+            margin-top: 24px;
+        }
+
+        .settings-group {
+            margin-bottom: 18px;
+        }
+
+        .settings-group + .settings-group {
+            border-top: 1px solid rgb(0 29 255 / 64%);
+            padding-top: 18px;
+            margin-top: 18px;
+        }
+
+        .settings-group h3 {
+            margin: 0 0 10px;
+            font-size: 15px;
+            color: #cfe3ff;
+        }
+
+        .settings-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 12px;
+        }
+
+        .field {
+            background: rgba(10, 20, 40, 0.6);
+            border: 1px solid rgba(51, 183, 255, 0.2);
+            border-radius: 12px;
+            padding: 10px 12px;
+        }
+
+        .field label {
+            display: block;
+            font-size: 12px;
+            color: var(--muted);
+            margin-bottom: 6px;
+        }
+
+        .field input {
+            width: 100%;
+            background: transparent;
+            border: 1px solid rgba(51, 183, 255, 0.3);
+            color: var(--text);
+            border-radius: 8px;
+            padding: 8px 10px;
+            font-size: 13px;
+        }
+
+        .field input[type="checkbox"] {
+            width: auto;
+        }
+
+        .field small {
+            display: block;
+            margin-top: 6px;
+            color: var(--muted);
+            font-size: 11px;
+        }
+
+        .actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 18px;
+        }
+
+        .actions.bot-actions {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 10px;
+            align-items: stretch;
+        }
+
+        .actions.bot-actions .btn {
+            width: 100%;
+            text-align: center;
+        }
+
+        .settings-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin-bottom: 8px;
+        }
+
+        .lock-btn {
+            background: rgba(15, 30, 55, 0.85);
+            border: 1px solid rgba(51, 183, 255, 0.35);
+            color: var(--text);
+            border-radius: 999px;
+            padding: 6px 14px;
+            font-size: 12px;
+            cursor: pointer;
+        }
+
+        .lock-btn.locked {
+            background: rgba(248, 113, 113, 0.12);
+            border-color: rgba(248, 113, 113, 0.6);
+        }
+
+        .btn:disabled,
+        .lock-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-bottom: 18px;
+        }
+
+        .tab-btn {
+            background: rgba(10, 20, 40, 0.7);
+            border: 1px solid rgba(51, 183, 255, 0.3);
+            color: var(--text);
+            border-radius: 999px;
+            padding: 8px 16px;
+            font-size: 13px;
+            cursor: pointer;
+            letter-spacing: 0.2px;
+        }
+
+        .tab-btn.active {
+            background: rgba(51, 183, 255, 0.25);
+            border-color: rgba(51, 183, 255, 0.7);
+            box-shadow: 0 10px 20px rgba(15, 160, 255, 0.25);
+        }
+
+        .tab-panel {
+            display: none;
+        }
+
+        .tab-panel.active {
+            display: block;
+        }
+
+        .note {
+            color: var(--muted);
+            font-size: 12px;
+            margin-top: 8px;
+        }
+
+        .restart-note {
+            color: var(--muted);
+            font-size: 12px;
+            margin-top: 6px;
+        }
+
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(8, 14, 28, 0.78);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            padding: 20px;
+        }
+
+        .modal-overlay.open {
+            display: flex;
+        }
+
+        .modal {
+            width: min(1200px, 96vw);
+            height: min(86vh, 880px);
+            background: var(--panel);
+            border: 1px solid var(--panel-border);
+            border-radius: 18px;
+            box-shadow: 0 24px 60px rgba(0, 0, 0, 0.55);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .modal-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            padding: 14px 18px;
+            border-bottom: 1px solid rgba(51, 183, 255, 0.2);
+        }
+
+        .modal-header h3 {
+            margin: 0;
+            font-size: 16px;
+            color: #e6f1ff;
+        }
+
+        .modal-close {
+            border: 1px solid rgba(51, 183, 255, 0.4);
+            background: rgba(10, 20, 40, 0.8);
+            color: var(--text);
+            border-radius: 8px;
+            padding: 6px 10px;
+            cursor: pointer;
+        }
+
+        .modal-body {
+            flex: 1;
+        }
+
+        .modal-body iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+
+        @media (max-width: 768px) {
+            .page-header {
+                align-items: flex-start;
+            }
+
+            .actions,
+            .header-actions {
+                flex-wrap: wrap;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="page">
+        <div class="tabs" role="tablist" aria-label="Разделы настроек">
+            <button class="tab-btn active" data-tab="status" role="tab" aria-selected="true">Статусы</button>
+            <button class="tab-btn" data-tab="settings" role="tab" aria-selected="false">Настройки</button>
+        </div>
+
+        <div class="tab-panel active" id="tab-status" role="tabpanel">
+            <div class="page-header">
+                <div>
+                    <h1>Админ — настройки</h1>
+                    <p>Статусы систем и управление конфигурацией приложения.</p>
+                </div>
+                <div class="header-actions">
+                    <button class="btn" id="refresh-status">Обновить статусы</button>
+                    <button class="btn primary" id="open-stats">Открыть статистику</button>
+                    <button class="btn" id="restart-server">Перезапустить сервер</button>
+                    <a class="btn" href="/admin/logout">Выйти</a>
+                </div>
+            </div>
+
+            <div class="grid" id="status-grid">
+                <div class="card">
+                    <h2>Статусы</h2>
+                    <div class="note">Данные загружаются...</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="tab-panel" id="tab-settings" role="tabpanel">
+            <div class="settings-section card">
+                <div class="settings-header">
+                    <h2>Настройки</h2>
+                    <button class="lock-btn locked" id="toggle-settings-lock" type="button">Разблокировать</button>
+                </div>
+                <div id="settings-container"></div>
+                <div class="actions">
+                    <button class="btn primary" id="save-settings">Сохранить</button>
+                    <button class="btn" id="reload-settings">Обновить</button>
+                </div>
+                <div class="note" id="settings-note"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="stats-modal" role="dialog" aria-modal="true">
+        <div class="modal">
+            <div class="modal-header">
+                <h3>Статистика активности</h3>
+                <button class="modal-close" id="close-stats">Закрыть</button>
+            </div>
+            <div class="modal-body">
+                <iframe src="/admin/stats" title="Статистика активности"></iframe>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const passwordKeys = new Set([
+            'ADMIN_PASSWORD',
+            'ONE_C_PASSWORD',
+            'POSTGRES_PASSWORD',
+            'TELEGRAM_BOT_TOKEN',
+            'VK_BOT_TOKEN',
+            'SECRET_KEY'
+        ]);
+
+        const labelMap = {
+            ADMIN_LOGIN: 'Admin login',
+            ADMIN_PASSWORD: 'Admin password',
+            RUN_HOST: 'Run host',
+            RUN_PORT: 'Run port',
+            RUN_DEBUG: 'Run debug',
+            TELEGRAM_BOT_ENABLED: 'Telegram bot enabled',
+            VK_BOT_ENABLED: 'VK bot enabled',
+            FAMILIARIZATION_DOCS_SOURCE: 'Familiarization source (path/url)',
+            FAMILIARIZATION_DOCS_PATH: 'Familiarization path',
+            FAMILIARIZATION_DOCS_URL: 'Familiarization URL (GET)',
+            ONE_C_USERNAME: '1C логин',
+            ONE_C_PASSWORD: '1C пароль',
+            ONE_C_PAYSLIP_URL: '1C PaySlip URL',
+            ONE_C_VACATIONS_URL: '1C Vacations URL',
+            ONE_C_PERSONAL_DATA_URL: '1C PersonalData URL',
+            ONE_C_TIMESHEET_URL: '1C Timesheet URL',
+            POSTGRES_HOST: 'PostgreSQL host',
+            POSTGRES_PORT: 'PostgreSQL port',
+            POSTGRES_DB: 'PostgreSQL db',
+            POSTGRES_USER: 'PostgreSQL user',
+            POSTGRES_PASSWORD: 'PostgreSQL password',
+            TELEGRAM_BOT_TOKEN: 'Telegram bot token',
+            VK_BOT_TOKEN: 'VK bot token',
+            VK_GROUP_ID: 'VK group id',
+            SESSION_COOKIE_NAME: 'Session cookie name',
+            SESSION_COOKIE_HTTPONLY: 'Session cookie httpOnly',
+            SESSION_COOKIE_SECURE: 'Session cookie secure',
+            SESSION_COOKIE_SAMESITE: 'Session cookie sameSite',
+            PERMANENT_SESSION_LIFETIME: 'Session lifetime (sec)',
+            SESSION_REFRESH_EACH_REQUEST: 'Session refresh each request',
+            SESSION_TYPE: 'Session type',
+            SESSION_FILE_DIR: 'Session file dir',
+            SESSION_PERMANENT: 'Session permanent',
+            SECRET_KEY: 'Secret key'
+        };
+
+        const groups = [
+            {
+                title: 'Run',
+                keys: ['RUN_HOST', 'RUN_PORT', 'RUN_DEBUG']
+            },
+            {
+                title: 'Familiarization',
+                keys: ['FAMILIARIZATION_DOCS_SOURCE', 'FAMILIARIZATION_DOCS_PATH', 'FAMILIARIZATION_DOCS_URL']
+            },
+            {
+                title: '1C',
+                keys: ['ONE_C_USERNAME', 'ONE_C_PASSWORD', 'ONE_C_PAYSLIP_URL', 'ONE_C_VACATIONS_URL', 'ONE_C_PERSONAL_DATA_URL', 'ONE_C_TIMESHEET_URL']
+            },
+            {
+                title: 'PostgreSQL',
+                keys: ['POSTGRES_HOST', 'POSTGRES_PORT', 'POSTGRES_DB', 'POSTGRES_USER', 'POSTGRES_PASSWORD']
+            },
+            {
+                title: 'VK / Telegram',
+                keys: ['TELEGRAM_BOT_ENABLED', 'VK_BOT_ENABLED', 'TELEGRAM_BOT_TOKEN', 'VK_BOT_TOKEN', 'VK_GROUP_ID']
+            },
+            {
+                title: 'Session',
+                keys: ['SESSION_COOKIE_NAME', 'SESSION_COOKIE_HTTPONLY', 'SESSION_COOKIE_SECURE', 'SESSION_COOKIE_SAMESITE', 'PERMANENT_SESSION_LIFETIME', 'SESSION_REFRESH_EACH_REQUEST', 'SESSION_TYPE', 'SESSION_FILE_DIR', 'SESSION_PERMANENT']
+            },
+            {
+                title: 'Security',
+                keys: ['ADMIN_LOGIN', 'ADMIN_PASSWORD', 'SECRET_KEY']
+            }
+        ];
+
+        let currentSettings = {};
+        let settingsLocked = true;
+
+        async function loadSettings() {
+            const note = document.getElementById('settings-note');
+            note.textContent = '';
+            const response = await fetch('/api/admin_settings');
+            if (response.status === 401) {
+                window.location.href = '/admin/login?next=/admin/settings';
+                return;
+            }
+            if (!response.ok) {
+                note.textContent = 'Нет доступа к настройкам.';
+                return;
+            }
+            const data = await response.json();
+            currentSettings = data.settings || {};
+            renderSettings(currentSettings);
+        }
+
+        function renderSettings(settings) {
+            const container = document.getElementById('settings-container');
+            container.innerHTML = '';
+
+            groups.forEach((group) => {
+                const groupWrap = document.createElement('div');
+                groupWrap.className = 'settings-group';
+                groupWrap.innerHTML = `<h3>${group.title}</h3>`;
+
+                const grid = document.createElement('div');
+                grid.className = 'settings-grid';
+
+                group.keys.forEach((key) => {
+                    const value = settings[key];
+                    const field = document.createElement('div');
+                    field.className = 'field';
+
+                    const label = document.createElement('label');
+                    label.textContent = labelMap[key] || key;
+                    field.appendChild(label);
+
+                    let input;
+                    if (typeof value === 'boolean') {
+                        input = document.createElement('input');
+                        input.type = 'checkbox';
+                        input.checked = value;
+                    } else {
+                        input = document.createElement('input');
+                        if (passwordKeys.has(key)) {
+                            input.type = 'password';
+                        } else if (key === 'POSTGRES_PORT' || key === 'PERMANENT_SESSION_LIFETIME' || key === 'RUN_PORT') {
+                            input.type = 'number';
+                        } else {
+                            input.type = 'text';
+                        }
+                        input.value = value !== null && value !== undefined ? value : '';
+                    }
+
+                    input.dataset.key = key;
+                    field.appendChild(input);
+
+                    if (key === 'PERMANENT_SESSION_LIFETIME') {
+                        const hint = document.createElement('small');
+                        hint.textContent = 'Значение в секундах.';
+                        field.appendChild(hint);
+                    }
+
+                    grid.appendChild(field);
+                });
+
+                groupWrap.appendChild(grid);
+                container.appendChild(groupWrap);
+            });
+
+            applySettingsLock();
+        }
+
+        function applySettingsLock() {
+            const inputs = document.querySelectorAll('#settings-container input');
+            inputs.forEach((input) => {
+                input.disabled = settingsLocked;
+            });
+
+            const saveButton = document.getElementById('save-settings');
+            saveButton.disabled = settingsLocked;
+
+            const lockButton = document.getElementById('toggle-settings-lock');
+            lockButton.classList.toggle('locked', settingsLocked);
+            lockButton.textContent = settingsLocked ? 'Разблокировать' : 'Заблокировать';
+
+            const note = document.getElementById('settings-note');
+            if (settingsLocked) {
+                note.textContent = 'Настройки заблокированы для редактирования.';
+            } else if (note.textContent === 'Настройки заблокированы для редактирования.') {
+                note.textContent = '';
+            }
+        }
+
+        async function saveSettings() {
+            const note = document.getElementById('settings-note');
+            note.textContent = 'Сохранение...';
+
+            const inputs = document.querySelectorAll('[data-key]');
+            const settings = {};
+            inputs.forEach((input) => {
+                const key = input.dataset.key;
+                if (input.type === 'checkbox') {
+                    settings[key] = input.checked;
+                } else if (input.type === 'number') {
+                    settings[key] = input.value === '' ? null : Number(input.value);
+                } else {
+                    settings[key] = input.value;
+                }
+            });
+
+            const response = await fetch('/api/admin_settings', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ settings })
+            });
+
+            if (response.status === 401) {
+                window.location.href = '/admin/login?next=/admin/settings';
+                return;
+            }
+            if (!response.ok) {
+                note.textContent = 'Ошибка сохранения. Проверьте доступ.';
+                return;
+            }
+
+            const data = await response.json();
+            currentSettings = data.settings || {};
+            renderSettings(currentSettings);
+            note.textContent = 'Настройки сохранены.';
+        }
+
+        async function loadStatus() {
+            const grid = document.getElementById('status-grid');
+            grid.innerHTML = '';
+
+            let botStatus = null;
+            try {
+                const botResponse = await fetch('/api/admin_bot_status', { credentials: 'include' });
+                if (botResponse.ok) {
+                    botStatus = await botResponse.json();
+                }
+            } catch (e) {
+                console.error('Failed to load bot status:', e);
+            }
+
+            const response = await fetch('/api/admin_status');
+            if (response.status === 401) {
+                window.location.href = '/admin/login?next=/admin/settings';
+                return;
+            }
+            if (!response.ok) {
+                grid.innerHTML = '<div class="card"><h2>Статусы</h2><div class="note">Нет доступа к статусам.</div></div>';
+                return;
+            }
+
+            const status = await response.json();
+            renderStatus(status, botStatus);
+        }
+
+        function buildStatusRow(label, ok, detail) {
+            const row = document.createElement('div');
+            row.className = 'status-row';
+            row.innerHTML = `
+                <span>${label}</span>
+                <span>${detail || ''}</span>
+            `;
+            const dot = document.createElement('span');
+            dot.className = 'status-dot' + (ok ? ' ok' : '');
+            row.prepend(dot);
+            return row;
+        }
+
+        function renderStatus(status, botStatus) {
+            const grid = document.getElementById('status-grid');
+
+            const systemCard = document.createElement('div');
+            systemCard.className = 'card';
+            systemCard.innerHTML = '<h2>Системы</h2>';
+            systemCard.appendChild(buildStatusRow('PostgreSQL', status.database && status.database.ok, status.database && status.database.ok ? 'ok' : 'fail'));
+            systemCard.appendChild(buildStatusRow('Activity log', status.activity_log && status.activity_log.writable, status.activity_log && status.activity_log.exists ? 'доступен' : 'нет файла'));
+            systemCard.appendChild(buildStatusRow('Session dir', status.session_dir && status.session_dir.writable, status.session_dir && status.session_dir.path ? status.session_dir.path : '—'));
+            grid.appendChild(systemCard);
+
+            const tokenCard = document.createElement('div');
+            tokenCard.className = 'card';
+            tokenCard.innerHTML = '<h2>Токены</h2>';
+            tokenCard.appendChild(buildStatusRow('Telegram', status.tokens && status.tokens.telegram, status.tokens && status.tokens.telegram ? 'настроен' : 'пусто'));
+            tokenCard.appendChild(buildStatusRow('VK', status.tokens && status.tokens.vk, status.tokens && status.tokens.vk ? 'настроен' : 'пусто'));
+            tokenCard.appendChild(buildStatusRow('VK group', status.tokens && status.tokens.vk_group, status.tokens && status.tokens.vk_group ? 'настроен' : 'пусто'));
+            grid.appendChild(tokenCard);
+
+            const oneC = status.one_c || {};
+            const oneCard = document.createElement('div');
+            oneCard.className = 'card';
+            oneCard.innerHTML = '<h2>1C</h2>';
+            Object.keys(oneC).forEach((key) => {
+                const item = oneC[key];
+                oneCard.appendChild(buildStatusRow(key, item.ok, String(item.status)));
+            });
+            grid.appendChild(oneCard);
+
+            const configCard = document.createElement('div');
+            configCard.className = 'card';
+            configCard.innerHTML = '<h2>Overrides</h2>';
+            const modified = status.config_overrides && status.config_overrides.modified_at ? status.config_overrides.modified_at.replace('T', ' ') : '—';
+            configCard.appendChild(buildStatusRow('config_overrides.json', Boolean(status.config_overrides && status.config_overrides.modified_at), modified));
+            grid.appendChild(configCard);
+            
+            if (botStatus) {
+                const botCard = document.createElement('div');
+                botCard.className = 'card';
+                botCard.innerHTML = '<h2>Боты</h2>';
+
+                const tg = botStatus.telegram || {};
+                const vk = botStatus.vk || {};
+
+                botCard.appendChild(buildStatusRow(
+                    'Telegram',
+                    Boolean(tg.running),
+                    tg.enabled ? (tg.running ? 'running' : 'stopped') : 'disabled'
+                ));
+                if (tg.error) {
+                    const note = document.createElement('div');
+                    note.className = 'note';
+                    note.textContent = 'Telegram error: ' + tg.error;
+                    botCard.appendChild(note);
+                }
+
+                botCard.appendChild(buildStatusRow(
+                    'VK',
+                    Boolean(vk.running),
+                    vk.enabled ? (vk.running ? 'running' : 'stopped') : 'disabled'
+                ));
+
+                const actions = document.createElement('div');
+                actions.className = 'actions bot-actions';
+                actions.innerHTML = `
+                    <button class="btn" data-bot="telegram" data-action="start">Telegram старт</button>
+                    <button class="btn" data-bot="telegram" data-action="stop">Telegram стоп</button>
+                    <button class="btn" data-bot="telegram" data-action="restart">Telegram рестарт</button>
+                `;
+                botCard.appendChild(actions);
+
+                const vkActions = document.createElement('div');
+                vkActions.className = 'actions bot-actions';
+                vkActions.innerHTML = `
+                    <button class="btn" data-bot="vk" data-action="start">VK старт</button>
+                    <button class="btn" data-bot="vk" data-action="stop">VK стоп</button>
+                    <button class="btn" data-bot="vk" data-action="restart">VK рестарт</button>
+                `;
+                botCard.appendChild(vkActions);
+
+                grid.appendChild(botCard);
+                wireBotButtons();
+            }
+
+        }
+
+        function wireBotButtons() {
+            const buttons = document.querySelectorAll('[data-bot][data-action]');
+            buttons.forEach((button) => {
+                button.addEventListener('click', async () => {
+                    const bot = button.dataset.bot;
+                    const action = button.dataset.action;
+                    try {
+                        const response = await fetch('/api/admin_bot_action', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ bot, action })
+                        });
+                        const data = await response.json();
+                        if (data.success) {
+                            alert(data.message || 'Ок');
+                        } else {
+                            alert('Ошибка: ' + (data.message || data.error || 'Unknown error'));
+                        }
+                        loadStatus();
+                    } catch (error) {
+                        alert('Ошибка управления ботом: ' + error.message);
+                    }
+                }, { once: true });
+            });
+        }
+
+        async function restartServer() {
+            const note = document.getElementById('settings-note');
+            note.textContent = 'Перезапуск сервера...';
+            const response = await fetch('/api/admin_reload', { method: 'POST' });
+            if (response.status === 401) {
+                window.location.href = '/admin/login?next=/admin/settings';
+                return;
+            }
+            if (!response.ok) {
+                note.textContent = 'Не удалось перезапустить сервер.';
+                return;
+            }
+            note.textContent = 'Команда перезапуска отправлена.';
+        }
+
+        function openStatsModal() {
+            document.getElementById('stats-modal').classList.add('open');
+        }
+
+        function closeStatsModal() {
+            document.getElementById('stats-modal').classList.remove('open');
+        }
+
+        document.getElementById('save-settings').addEventListener('click', saveSettings);
+        document.getElementById('reload-settings').addEventListener('click', loadSettings);
+        document.getElementById('refresh-status').addEventListener('click', loadStatus);
+        document.getElementById('open-stats').addEventListener('click', openStatsModal);
+        document.getElementById('restart-server').addEventListener('click', restartServer);
+        document.getElementById('toggle-settings-lock').addEventListener('click', () => {
+            settingsLocked = !settingsLocked;
+            applySettingsLock();
+        });
+        document.getElementById('close-stats').addEventListener('click', closeStatsModal);
+        document.getElementById('stats-modal').addEventListener('click', (event) => {
+            if (event.target.id === 'stats-modal') {
+                closeStatsModal();
+            }
+        });
+
+        document.querySelectorAll('.tab-btn').forEach((button) => {
+            button.addEventListener('click', () => {
+                const target = button.dataset.tab;
+                document.querySelectorAll('.tab-btn').forEach((btn) => {
+                    btn.classList.toggle('active', btn === button);
+                    btn.setAttribute('aria-selected', btn === button ? 'true' : 'false');
+                });
+                document.querySelectorAll('.tab-panel').forEach((panel) => {
+                    panel.classList.toggle('active', panel.id === `tab-${target}`);
+                });
+            });
+        });
+
+        loadSettings();
+        loadStatus();
+    </script>
+</body>
+</html>

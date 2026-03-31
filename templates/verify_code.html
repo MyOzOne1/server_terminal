@@ -1,0 +1,311 @@
+{% extends "base.html" %}
+
+{% block title %}Подтверждение кода{% endblock %}
+
+{% block styles %}
+<style>
+    body {
+        background: linear-gradient(135deg, #1e90ff 0%, #ffffff 100%); /* Градиент как в инструкции личного кабинета */
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        margin: 0;
+    }
+
+    .verify-container {
+        background: white;
+        padding: 30px 40px;
+        border-radius: 12px;
+        box-shadow: 0 8px 24px rgba(0,0,0,0.1);
+        width: 320px;
+        box-sizing: border-box;
+        text-align: center;
+    }
+
+    h1 {
+        color: #1e3a8a;
+        font-size: 24px;
+        margin-bottom: 25px;
+    }
+
+    .channel-info {
+        margin-bottom: 20px;
+        color: #6b7280;
+        font-size: 14px;
+    }
+
+    .code-input {
+        width: 100%;
+        padding: 12px 15px;
+        margin-bottom: 20px;
+        border: 2px solid #ddd;
+        border-radius: 8px;
+        font-size: 24px;
+        text-align: center;
+        letter-spacing: 10px;
+        transition: border-color 0.3s ease;
+        background: white;
+    }
+
+    .code-input:focus {
+        border-color: #3b82f6;
+        outline: none;
+    }
+
+    .submit-button {
+        background-color: #3b82f6;
+        color: white;
+        border: none;
+        padding: 12px;
+        width: 100%;
+        border-radius: 8px;
+        font-size: 16px;
+        cursor: pointer;
+        transition: background-color 0.3s ease;
+        margin-bottom: 20px;
+    }
+
+    .submit-button:hover {
+        background-color: #2563eb;
+    }
+
+    .keyboard {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 10px;
+        margin-top: 20px;
+    }
+
+    .key {
+        background-color: #f3f4f6;
+        border: 1px solid #d1d5db;
+        border-radius: 8px;
+        padding: 15px;
+        font-size: 18px;
+        cursor: pointer;
+        transition: background-color 0.3s;
+    }
+
+    .key:hover {
+        background-color: #d1d5db;
+    }
+
+    .key:active {
+        background-color: #4a53fb;
+    }
+
+    .clear-key {
+        grid-column: span 2;
+    }
+
+    .resend-link {
+        color: #3b82f6;
+        cursor: pointer;
+        text-decoration: underline;
+        margin-top: 15px;
+        display: block;
+        font-size: 14px;
+    }
+
+    .timer {
+        margin-top: 10px;
+        color: #6b7280;
+        font-size: 14px;
+    }
+
+    .error-message {
+        color: #ef4444;
+        margin-top: 15px;
+        font-size: 14px;
+        min-height: 20px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="verify-container">
+    <h1>Подтверждение входа</h1>
+    
+    <div class="channel-info">
+        Код отправлен через: <strong>{{ channel|upper }}</strong>
+    </div>
+    
+    <form id="verify-form" action="/verify_code" method="POST">
+        <input type="hidden" name="card_code" value="{{ card_code }}">
+        <input type="hidden" name="channel" value="{{ channel }}">
+        <input type="hidden" name="code" id="real-code"> <!-- ИЗМЕНЕНО: name="code" вместо name="real_code" -->
+        
+        <input type="text" class="code-input" id="code-input" placeholder="••••••" readonly>
+        <button type="submit" class="submit-button">Подтвердить</button>
+        
+        <div class="keyboard">
+            <div class="key" data-value="1">1</div>
+            <div class="key" data-value="2">2</div>
+            <div class="key" data-value="3">3</div>
+            <div class="key" data-value="4">4</div>
+            <div class="key" data-value="5">5</div>
+            <div class="key" data-value="6">6</div>
+            <div class="key" data-value="7">7</div>
+            <div class="key" data-value="8">8</div>
+            <div class="key" data-value="9">9</div>
+            <div class="key" data-value="0">0</div>
+            <div class="key clear-key" id="clear-key">⌫</div>
+        </div>
+    </form>
+    
+    <a class="resend-link" onclick="resendCode()">Отправить код повторно</a>
+    <div id="timer" class="timer">Повторная отправка через: 60 сек.</div>
+    <div id="error-message" class="error-message"></div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const codeInput = document.getElementById('code-input');
+    const realCodeInput = document.getElementById('real-code');
+    const keys = document.querySelectorAll('.key[data-value]');
+    const clearKey = document.getElementById('clear-key');
+    const form = document.getElementById('verify-form');
+    const errorMessage = document.getElementById('error-message');
+    const timerElement = document.getElementById('timer');
+    
+    const cardCode = '{{ card_code }}';
+    const channel = '{{ channel }}';
+    let codeValue = '';  // реальное значение
+    let countdown = 60;
+    let timerInterval;
+    
+    function updateInput() {
+        // Формируем строку длиной 6
+        // Введённые цифры показываем, остальные позиции — точки
+        const visiblePart = codeValue;
+        const dotsCount = 6 - visiblePart.length;
+        const dots = '•'.repeat(dotsCount);
+        codeInput.value = visiblePart + dots;
+    }
+    
+    // Запускаем таймер для повторной отправки
+    function startTimer() {
+        timerElement.style.display = 'block';
+        
+        timerInterval = setInterval(() => {
+            countdown--;
+            timerElement.textContent = `Повторная отправка через: ${countdown} сек.`;
+            
+            if (countdown <= 0) {
+                clearInterval(timerInterval);
+                timerElement.style.display = 'none';
+                countdown = 60;
+            }
+        }, 1000);
+    }
+    
+    // Запускаем таймер при загрузке страницы
+    startTimer();
+    
+    // Обработка нажатий на цифровые клавиши
+    keys.forEach(key => {
+        key.addEventListener('click', () => {
+            if (codeValue.length < 6) {
+                codeValue += key.getAttribute('data-value');
+                updateInput();
+                errorMessage.textContent = '';
+            }
+        });
+    });
+    
+    // Обработка кнопки "Стереть" — удаление последнего символа
+    clearKey.addEventListener('click', () => {
+        codeValue = codeValue.slice(0, -1);
+        updateInput();
+        errorMessage.textContent = '';
+    });
+    
+    // Обработка отправки формы
+    form.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        if (codeValue.length !== 6) {
+            errorMessage.textContent = 'Код должен состоять из 6 цифр';
+            return false;
+        }
+        
+        // Подставляем реальный код в скрытое поле для отправки
+        realCodeInput.value = codeValue;
+        
+        try {
+            const formData = new FormData(form);
+            
+            const response = await fetch('/verify_code', {
+                method: 'POST',
+                body: formData,
+                credentials: 'include'
+            });
+            
+            if (response.redirected) {
+                window.location.href = response.url;
+            } else {
+                const data = await response.json();
+                
+                if (data.success) {
+                    // Перенаправляем в профиль
+                    window.location.href = `/profile/${cardCode}?sid=${data.sid}`;
+                } else {
+                    errorMessage.textContent = data.error || 'Неверный код подтверждения';
+                    // Сбрасываем введенный код
+                    codeValue = '';
+                    updateInput();
+                }
+            }
+        } catch (error) {
+            console.error('Ошибка:', error);
+            errorMessage.textContent = 'Ошибка соединения с сервером';
+        }
+    });
+    
+    // Инициализируем поле
+    updateInput();
+    
+    // Функция повторной отправки кода
+    window.resendCode = function() {
+        if (countdown > 0) {
+            errorMessage.textContent = `Повторная отправка будет доступна через ${countdown} сек.`;
+            return;
+        }
+        
+        fetch('/resend_code', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            credentials: 'include',
+            body: JSON.stringify({
+                card_code: cardCode,
+                channel: channel
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Сбрасываем таймер
+                clearInterval(timerInterval);
+                countdown = 60;
+                startTimer();
+                errorMessage.textContent = '';
+                
+                // Сбрасываем введенный код
+                codeValue = '';
+                updateInput();
+            } else {
+                errorMessage.textContent = data.error || 'Ошибка отправки кода';
+            }
+        })
+        .catch(error => {
+            console.error('Ошибка:', error);
+            errorMessage.textContent = 'Ошибка при отправке кода';
+        });
+    };
+});
+</script>
+{% endblock %}

@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+
+{% block title %}Авторизация{% endblock %}
+
+{% block content %}
+<div class="login-container">
+    <h1>Авторизация по карте</h1>
+    <form method="POST">
+        <input type="text" 
+        class="aut_card_number"
+            name="card_number" 
+            placeholder="Введите номер карты"
+            required>
+        <button class="aut_button" type="submit">Войти</button>
+    </form>
+</div>
+{% endblock %}
+<style>
+    .aut_button{
+        width: 11%;
+        height: 23px;
+        background-color: #4f90d1;
+        color: white;
+        border: 0px;
+        border-radius: 5px;
+    }
+    .aut_card_number{
+        width: 11%;
+        height: 23px;
+        background-color: #4f90d1;
+        color: white;
+        border: 0px;
+        border-radius: 5px;
+    }
+    ::placeholder {
+        color: rgb(255, 255, 255); 
+    }
+</style>

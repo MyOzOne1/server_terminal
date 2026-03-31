@@ -1,0 +1,138 @@
+/* Основные стили */
+body {
+    font-family: 'Arial', sans-serif;
+    margin: 0;
+    padding: 20px;
+    background-color: #f5f5f5;
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    background: white;
+    padding: 30px;
+    border-radius: 10px;
+    box-shadow: 0 0 20px rgba(0,0,0,0.1);
+}
+
+/* Секция профиля */
+.profile-container {
+    display: grid;
+    gap: 30px;
+}
+
+.header-section {
+    text-align: center;
+    border-bottom: 2px solid #eee;
+    padding-bottom: 20px;
+}
+
+.header-section h1 {
+    color: #2c3e50;
+    margin: 0;
+}
+
+/* Статусы */
+.status-indicators {
+    margin-top: 15px;
+}
+
+.status {
+    display: inline-block;
+    padding: 8px 20px;
+    border-radius: 20px;
+    font-size: 0.9em;
+    margin: 0 5px;
+}
+
+.online { background: #27ae60; color: white; }
+.offline { background: #e74c3c; color: white; }
+.active { background: #32aa38; color: white; }
+.inactive { background: #e74c3c; color: white; }
+
+/* Информационные блоки */
+.personal-info {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 30px;
+}
+
+.info-block {
+    background: #f8f9fa;
+    padding: 25px;
+    border-radius: 8px;
+    border: 1px solid #eee;
+}
+
+.info-block h2 {
+    color: #34495e;
+    margin-top: 0;
+}
+
+dl {
+    display: grid;
+    grid-template-columns: max-content 1fr;
+    gap: 15px 25px;
+}
+
+dt {
+    font-weight: 600;
+    color: #7f8c8d;
+}
+
+dd {
+    margin: 0;
+    color: #2c3e50;
+}
+
+/* Таблица истории входов */
+.access-log {
+    margin-top: 30px;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 15px;
+}
+
+th, td {
+    padding: 12px 15px;
+    text-align: left;
+    border-bottom: 1px solid #ecf0f1;
+}
+
+th {
+    background: #3498db;
+    color: white;
+}
+
+tr:nth-child(even) {
+    background-color: #f8f9fa;
+}
+
+/* Адаптивность */
+@media (max-width: 768px) {
+    .personal-info {
+        grid-template-columns: 1fr;
+    }
+    
+    dl {
+        grid-template-columns: 1fr;
+        gap: 10px;
+    }
+}
+
+.transition {
+    transition: all 0.3s ease;
+}
+
+.hover-effect:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+}
+.hover-effect{
+    width: 50%;
+    height: 25px;
+    background-color: #0072B8;
+}

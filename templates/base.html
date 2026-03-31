@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}{% endblock %} Газпром бытовые системы</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🪪</text></svg>">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+            body {
+                margin: 0;
+                padding: 0;
+                font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+                background: linear-gradient(135deg, #1e90ff 0%, #ffffff 100%);
+            }
+            .gazprom-header {
+                background-color: #0c4da2;
+                color: white;
+                padding: 15px 30px;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            }
+            .gazprom-logo {
+                display: flex;
+                align-items: center;
+                gap: 15px;
+            }
+            .gazprom-logo h1 {
+                margin: 0;
+                font-size: 24px;
+                font-weight: 600;
+            }
+            .gazprom-logo i {
+                font-size: 28px;
+            }
+        </style>
+        {% block styles %}{% endblock %}
+</head>
+<body>
+    {% block content %}{% endblock %}
+    <script>
+        function isWebClient() {
+            return /mozilla|webkit|chrome|safari|firefox|edge/i.test(navigator.userAgent);
+        }
+    </script>
+    {% block scripts %}{% endblock %}
+
+<!-- В body, например в конце -->
+<div id="loading-spinner" style="
+    display:none;
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(255,255,255,0.7);
+    z-index: 9999;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+">
+    <div class="loader"></div>
+</div>
+
+<style>
+.loader {
+    border: 8px solid #f3f3f3;
+    border-top: 8px solid #0072B8;
+    border-radius: 50%;
+    width: 60px;
+    height: 60px;
+    animation: spin 1s linear infinite;
+}
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+</style>
+</body>
+</html>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const spinner = document.getElementById('loading-spinner');
+    if (!spinner) return;
+
+    // Проверяем, находимся ли мы на странице логина
+    const isLoginPage = window.location.pathname === '/login' || 
+                    window.location.pathname.endsWith('login.html');
+    
+    // Если это страница логина - не добавляем обработчики
+    if (isLoginPage) {
+        spinner.style.display = 'none';
+        return;
+    }
+
+    // Показываем спиннер при переходе по ссылкам внутри сайта
+    document.body.addEventListener('click', e => {
+        const link = e.target.closest('a');
+        if (!link) return;
+
+        const href = link.getAttribute('href');
+
+        // Игнорируем внешние ссылки, пустые и якоря
+        if (!href || href.startsWith('http') && !href.includes(window.location.host)) return;
+        if (href.startsWith('#')) return;
+
+        // Показываем спиннер
+        spinner.style.display = 'flex';
+    });
+
+    // Для форм — показываем спиннер при submit
+    document.body.addEventListener('submit', e => {
+        spinner.style.display = 'flex';
+    });
+
+    // Когда страница загрузилась — скрываем спиннер
+    window.addEventListener('load', () => {
+        spinner.style.display = 'none';
+    });
+});
+
+</script>

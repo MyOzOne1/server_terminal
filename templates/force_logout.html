@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+
+{# Переопределяем блок head, чтобы добавить стили #}
+{% block head %}
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        background-color: #f4f4f9;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        margin: 0;
+    }
+    .logout-container {
+        text-align: center;
+        padding: 30px;
+        background-color: white;
+        border-radius: 10px;
+        box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+        max-width: 500px;
+        width: 100%;
+    }
+    h1 {
+        color: #2c3e50;
+        margin-bottom: 20px;
+    }
+    p {
+        color: #7f8c8d;
+        margin-bottom: 30px;
+        font-size: 18px;
+    }
+    .btn-login {
+        background-color: #3498db;
+        color: white;
+        border: none;
+        padding: 12px 30px;
+        border-radius: 5px;
+        font-size: 16px;
+        cursor: pointer;
+        transition: background-color 0.3s;
+    }
+    .btn-login:hover {
+        background-color: #2980b9;
+    }
+    .countdown {
+        font-size: 20px;
+        font-weight: bold;
+        color: #e74c3c;
+        margin: 15px 0;
+    }
+</style>
+{# Мета-тег для автоматического редиректа через 5 секунд #}
+<meta http-equiv="refresh" content="5;url=/login_by_card">
+{% endblock %}
+
+{# Основное содержимое #}
+{% block content %}
+<div class="logout-container">
+    <h1>Сессия завершена</h1>
+    <p>Ваша сессия была завершена. Для продолжения работы необходимо авторизоваться снова.</p>
+    
+    <div class="countdown">Перенаправление через: <span id="count">5</span> сек.</div>
+    
+    <button class="btn-login" onclick="redirectToLogin()">Авторизоваться сейчас</button>
+</div>
+
+<script>
+    let seconds = 5;
+    const countElement = document.getElementById('count');
+    
+    function updateCountdown() {
+        seconds--;
+        countElement.textContent = seconds;
+        
+        if (seconds <= 0) {
+            redirectToLogin();
+        } else {
+            setTimeout(updateCountdown, 1000);
+        }
+    }
+    
+    function redirectToLogin() {
+        window.location.href = '/login_by_card';
+    }
+    
+    // Запускаем обратный отсчет
+    setTimeout(updateCountdown, 1000);
+</script>
+{% endblock %}

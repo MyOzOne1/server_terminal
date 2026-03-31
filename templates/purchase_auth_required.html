@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Требуется авторизация</title>
+    <style>
+        body {
+        background: linear-gradient(135deg, #1e90ff 0%, #ffffff 100%); /* Градиент как в инструкции личного кабинета */
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        margin: 0;
+        padding-top: -2vh;
+        }
+        .auth-container {
+            text-align: center;
+            padding: 30px;
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+            max-width: 500px;
+            width: 100%;
+            min-height: 300px;  /* Одинаковая минимальная высота для обоих */
+            display: flex;
+            flex-direction: column;
+            justify-content: center;  /* Центрирование содержимого по вертикали */
+            align-items: center;      /* Центрирование по горизонтали */
+        }
+        h1 {
+            color: #2c3e50;
+            margin-bottom: 20px;
+        }
+        p {
+            color: #7f8c8d;
+            margin-bottom: 30px;
+            font-size: 18px;
+        }
+        /* Кнопка удалена */
+    </style>
+</head>
+<body>
+    <div class="auth-container">
+        <h1>Требуется авторизация</h1>
+        <p>Для просмотра страницы приобретения продукции необходимо авторизоваться</p>
+        
+        <div id="auth-check" style="margin-top: 20px; display: none;">
+            <p style="color: rgb(9, 206, 58);">Пользователь авторизован, перенаправляем...</p>
+        </div>
+        
+        <div id="logout-message" style="display: none; margin-top: 20px; padding: 10px; background-color: #e74c3c; color: white; border-radius: 5px;">
+            <p>Сессия завершена. Для продолжения авторизуйтесь снова.</p>
+        </div>
+    </div>
+    
+<script>
+    // Функция проверки статуса авторизации
+    function checkAuthStatus() {
+        fetch('/api/auth_status')
+            .then(response => response.json())
+            .then(data => {
+                if (data.authenticated) {
+                    // Показываем сообщение о перенаправлении
+                    document.getElementById('auth-check').style.display = 'block';
+                    
+                    // Перенаправляем на страницу с данными через 2 секунды
+                    setTimeout(() => {
+                        window.location.href = '/purchase';
+                    }, 2000);
+                }
+            });
+    }
+    
+    // Проверяем статус каждые 5 секунд
+    setInterval(checkAuthStatus, 5000);
+    checkAuthStatus();
+</script>
+</body>
+</html>

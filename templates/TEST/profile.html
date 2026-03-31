@@ -1,0 +1,625 @@
+
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container">
+    <div class="profile-container">
+        <!-- Основная информация -->
+        <div class="header-section">
+            <h1>{{ user.last_name }} {{ user.first_name }} {{ user.middle_name }}</h1>
+            
+            <div class="status-indicators">
+                <span class="status {{ 'online' if user.is_online else 'offline' }}">
+                    {{ 'На работе' if user.is_online else 'Не на работе' }}
+                </span>
+                <span class="status {{ 'active' if user.is_active else 'inactive' }}">
+                    {{ 'Карта активна' if user.is_active else 'Карта заблокирована' }}
+                </span>
+            </div>
+        </div>
+
+        <!-- Персональные данные -->
+        <div class="personal-info">
+            <div class="info-block">
+                <h2>Личная информация</h2>
+                <dl>
+                    <dt>Дата рождения:</dt>
+                    <dd>{{ user.birthday|default('не указано') }}</dd>
+                    
+                    <dt>Телефон:</dt>
+                    <dd>{{ user.phone|default('не указан') }}</dd>
+                    
+                    <dt>Email:</dt>
+                    <dd>{{ user.email|default('не указан') }}</dd>
+                </dl>
+            </div>
+
+            <div class="info-block">
+                <h2>Рабочая информация</h2>
+                <dl>
+                    <dt>Идентификационный номер:</dt>
+                    <dd>{{ user.users_id }}</dd>
+                    
+                    <dt>Место работы:</dt>
+                    <dd>{{ user.work_place|default('не указано') }}</dd>
+                    
+                    <dt>Должность:</dt>
+                    <dd>{{ user.services|default('не указана') }}</dd>
+                    
+                    <dt>Дата устройства:</dt>
+                    <dd>{{ user.users_created_at|default('не указана') }}</dd>
+
+                    <dt>Время прихода:</dt>
+                    <dd>{{ user.zp|default('В разработке') }}</dd>
+                    
+                    <dt>Время ухода:</dt>
+                    <dd>{{ user.zp|default('В разработке') }}</dd>
+
+                    <dt>Расчетный лист:</dt>
+                    <dd><button class="hover-effect" onclick="showModal('calculation')">Посмотреть</button></dd>
+                </dl>
+            </div>
+        </div>
+
+        <!-- Отпуска и Документы в одном ряду -->
+        <div class="personal-info">
+            <div class="info-block">
+                <h2>Отпуска</h2>
+                <dl>
+                    <dt>До начала отпуска:</dt>
+                    <dd>{{ user.otpusk|default('не указано') }}</dd>
+                    
+                    <dt>Даты отпуска:</dt>
+                    <dd>{{ user.data_otpusk|default('не указан') }}</dd>
+                    
+                    <dt>До следующего отпуска:</dt>
+                    <dd>{{ user.dni_do|default('не указан') }}</dd>
+
+                    <dt>Посмотреть список отпусков:</dt>
+                    <dd><div class="wrap-vacation"><button class="hover-effect-vacation" onclick="showModal('vacation')">Посмотреть</button><img src="vacation.png" value="vacation" class="vacation"></div></dd>
+                </dl>
+            </div>
+
+            <div class="info-block">
+                <h2>Документы</h2>
+                <dl>
+                    <dt>Лист ознакомления:</dt>
+                    <dd><button class="hover-effect" onclick="showModal('familiarization')">Посмотреть</button></dd>
+
+                    <dt>Подписание документов:</dt>
+                    <dd><button class="hover-effect" onclick="showModal('signature')">Посмотреть</button></dd>
+
+                    <dt>Заявления:</dt>
+                    <dd><button class="hover-effect" onclick="showModal('applications')">Посмотреть</button></dd>
+                </dl>
+            </div>
+        </div>
+
+        <!-- История входов -->
+        <div class="access-log">
+            <h2>Последние 10 входов</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Дата и время</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for log in logs %}
+                    <tr>
+                        <td>{{ log.access_time }}</td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td>Нет данных</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Модальные окна -->
+<div id="modal-calculation" class="modal" style="display:none;">
+    <div class="modal-content">
+        <span class="close" onclick="closeModal('modal-calculation')">&times;</span>
+        <h2>Выбор даты для расчетного листа</h2>
+        <div>
+            <label for="year-select">Год:</label>
+            <select id="year-select">
+                {% for year in range(2020, 2031) %}
+                <option value="{{ year }}">{{ year }}</option>
+                {% endfor %}
+            </select>
+
+            <label for="month-select">Месяц:</label>
+            <select id="month-select">
+                <option value="1">Январь</option>
+                <option value="2">Февраль</option>
+                <option value="3">Март</option>
+                <option value="4">Апрель</option>
+                <option value="5">Май</option>
+                <option value="6">Июнь</option>
+                <option value="7">Июль</option>
+                <option value="8">Август</option>
+                <option value="9">Сентябрь</option>
+                <option value="10">Октябрь</option>
+                <option value="11">Ноябрь</option>
+                <option value="12">Декабрь</option>
+            </select>
+            <button class="hover-effect" onclick="fetchData()">Получить данные</button>
+        </div>
+    </div>
+</div>
+
+<div id="modal-vacation" class="modal" style="display:none;">
+    <div class="modal-content">
+        <span class="close" onclick="closeModal('modal-vacation')">&times;</span>
+        <h2>Выбор года для списка отпусков</h2>
+        <div>
+            <label for="vacation-year-select">Год:</label>
+            <select id="vacation-year-select">
+                {% for year in range(2020, 2031) %}
+                <option value="{{ year }}">{{ year }}</option>
+                {% endfor %}
+            </select>
+            <button class="hover-effect" onclick="fetchVacationData()">Получить данные</button>
+        </div>
+    </div>
+</div>
+
+<div id="modal-familiarization" class="modal" style="display:none;">
+    <div class="modal-content">
+        <span class="close" onclick="closeModal('modal-familiarization')">&times;</span>
+        <h2>Лист ознакомления</h2>
+        <table id="documents-table">
+            <thead>
+                <tr>
+                    <th>Документ</th>
+                    <th>Дата получения</th>
+                    <th>Ознакомлен</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for document in documents %}
+                <tr>
+                    <td>{{ document.title }}</td>
+                    <td>{{ document.date_received }}</td>
+                    <td><button class="hover-effect-window" onclick="confirmFamiliarization('{{ document.id }}')">Ознакомлен</button></td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="3">Нет документов на ознакомление</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div id="modal-signature" class="modal" style="display:none;">
+    <div class="modal-content">
+        <span class="close" onclick="closeModal('modal-signature')">&times;</span>
+        <h2>Подписание документов</h2>
+        <table id="signature-documents-table">
+            <thead>
+                <tr>
+                    <th>Документ</th>
+                    <th>Дата получения</th>
+                    <th>Подписать</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for document in signature_documents %}
+                <tr>
+                    <td>{{ document.title }}</td>
+                    <td>{{ document.date_received }}</td>
+                    <td><button class="hover-effect-window" onclick="confirmSignature('{{ document.id }}')">Подписать</button></td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="3">Нет документов для подписания</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div id="modal-applications" class="modal" style="display:none;">
+    <div class="modal-content">
+        <span class="close" onclick="closeModal('modal-applications')">&times;</span>
+        <h2>Заявления и служебные записки</h2>
+        <div class="tab">
+            <button class="tablinks" onclick="openTab(event, 'applications')">Заявления</button>
+            <button class="tablinks" onclick="openTab(event, 'memos')">Служебные записки</button>
+        </div>
+
+        <div id="applications" class="tabcontent" style="display:block;">
+            <h3>Заявления</h3>
+            <table id="applications-table">
+                <thead>
+                    <tr>
+                        <th>Название</th>
+                        <th>Дата подачи</th>
+                        <th>Статус</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for application in applications %}
+                    <tr>
+                        <td>{{ application.title }}</td>
+                        <td>{{ application.date_submitted }}</td>
+                        <td>{{ application.status }}</td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="3">Нет заявлений</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <div id="memos" class="tabcontent" style="display:none;">
+            <h3>Служебные записки</h3>
+            <table id="memos-table">
+                <thead>
+                    <tr>
+                        <th>Название</th>
+                        <th>Дата подачи</th>
+                        <th>Статус</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for memo in memos %}
+                    <tr>
+                        <td>{{ memo.title }}</td>
+                        <td>{{ memo.date_submitted }}</td>
+                        <td>{{ memo.status }}</td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="3">Нет служебных записок</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- CSS для модальных окон и Flexbox -->
+<style>
+/* Основные стили */
+body {
+    font-family: 'Arial', sans-serif;
+    margin: 0;
+    padding: 20px;
+    background: rgb(226, 226, 226);
+}
+.hover-effect{
+    width: 40%;
+    height: 23px;
+    background-color:#0072B8;
+    color: white;
+    border: 0px;
+    border-radius: 5px;
+}
+.tablinks{
+    width: 30%;
+    height: 23px;
+    background-color:#0072B8;
+    color: white;
+    border: 0px;
+    border-radius: 5px;  
+}
+.hover-effect-window{
+    width: 100%;
+    height: 23px;
+    background-color:#0072B8;
+    color: white;
+    border: 0px;
+    border-radius: 5px;
+}
+.hover-effect-vacation{
+    display: grid;
+    grid-column-start: 1;
+    width: 100%;
+    height: 23px;
+    background-color:#0072B8;
+    color: white;
+    border: 0px;
+    border-radius: 5px;
+    place-items: center;
+}
+.vacation{
+    display: grid;
+    grid-column-start: 2;
+    width: 90px;
+    height: 60px;
+    margin-left: 20px;
+    margin-top: 10px;
+}
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    background-color: white; /* Светлый фон */
+    padding: 30px;
+    border-radius: 10px;
+    box-shadow: 0 0 20px rgba(0,0,0,0.1);
+}
+
+/* Секция профиля */
+.profile-container {
+    display: grid;
+    gap: 30px;
+}
+
+.header-section {
+    text-align: center;
+    border-bottom: 2px solid #0072b8; /* Цвет Газпрома */
+    padding-bottom: 20px;
+}
+
+.header-section h1 {
+    color: #0072b8; /* Основной цвет Газпрома */
+    margin: 0;
+}
+
+/* Статусы */
+.status-indicators {
+    margin-top: 15px;
+}
+
+.status {
+    display: inline-block;
+    padding: 8px 20px;
+    border-radius: 20px;
+    font-size: 0.9em;
+    margin: 0 5px;
+}
+
+.online { background: #27ae60; color: white; }
+.offline { background: #e74c3c; color: white; }
+.active { background: #32aa38; color: white; }
+.inactive { background: #e74c3c; color: white; }
+
+/* Информационные блоки */
+.personal-info {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 30px;
+}
+.info-block {
+    background: #f0f8ff; /* Светлый синий фон */
+    padding: 25px;
+    border-radius: 8px;
+    border: 1px solid #0072b8; /* Цвет Газпрома */
+}
+
+
+dl {
+    display: grid;
+    grid-template-columns: max-content 1fr;
+    gap: 15px 25px;
+}
+
+dt {
+    font-weight: 600;
+    color: #333; /* Темный текст */
+}
+
+dd {
+    margin: 0;
+    color: #2c3e50;
+}
+
+/* Таблица истории входов */
+.access-log {
+    margin-top: 30px;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 15px;
+}
+
+th, td {
+    padding: 12px 15px;
+    text-align: left;
+    border-bottom: 1px solid #ecf0f1;
+}
+.wrap-vacation{
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+}
+th {
+    background: #0072b8; /* Цвет заголовка таблицы */
+    color: white;
+}
+
+tr:nth-child(even) {
+    background-color: #f8f9fa;
+}
+
+/* Модальные окна */
+.modal {
+    display: none; /* Скрыть модальное окно по умолчанию */
+    position: fixed; /* Оставить модальное окно на месте при прокрутке */
+    z-index: 1000; /* Убедитесь, что модальное окно поверх других элементов */
+    left: 0;
+    top: 0;
+    width: 100%; /* Полная ширина */
+    height: 100%; /* Полная высота */
+    overflow: auto; /* Включить прокрутку, если необходимо */
+    background-color: rgb(0,0,0); /* Фоновый цвет с затемнением */
+    background-color: rgba(0,0,0,0.4); /* Полупрозрачный фон */
+}
+
+.modal-content {
+    background-color: #fefefe;
+    margin: 15% auto; /* 15% сверху и центрирование по горизонтали */
+    padding: 20px;
+    border: 1px solid #888;
+    width: 80%; /* Ширина модального окна */
+    max-width: 600px; /* Максимальная ширина модального окна */
+}
+
+.close {
+    color: #0072b8; /* Цвет кнопки закрытия */
+    float: right;
+    font-size: 28px;
+    font-weight: bold;
+}
+
+.close:hover,
+.close:focus {
+    color: #005f8d; /* Более темный оттенок при наведении */
+    text-decoration: none;
+    cursor: pointer;
+}
+
+/* Адаптивность */
+@media (max-width: 768px) {
+    .personal-info {
+        grid-template-columns: 1fr;
+    }
+    
+    dl {
+        grid-template-columns: 1fr;
+        gap: 10px;
+    }
+}
+
+.transition {
+    transition: all 0.3s ease;
+}
+
+.hover-effect {
+    cursor: pointer;
+    transition: transform 0.3s ease;
+}
+.hover-effect:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+}
+.hover-effect-vacation {
+    cursor: pointer;
+    transition: transform 0.3s ease;
+}
+.hover-effect-vacation:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+}
+.vacation{
+    width: 110px;
+    height: 70px;
+}
+</style>
+
+<!-- JavaScript для управления модальными окнами и вкладками -->
+<script>
+function showModal(modalId) {
+    // Скрыть все модальные окна
+    const modals = document.querySelectorAll('.modal');
+    modals.forEach(modal => {
+        modal.style.display = 'none';
+    });
+
+    // Показать выбранное модальное окно
+    document.getElementById('modal-' + modalId).style.display = 'block';
+}
+
+function closeModal(modalId) {
+    document.getElementById(modalId).style.display = 'none';
+}
+
+// Закрытие модального окна при клике вне его
+window.onclick = function(event) {
+    const modals = document.querySelectorAll('.modal');
+    modals.forEach(modal => {
+        if (event.target == modal) {
+            closeModal(modal.id);
+        }
+    });
+}
+
+function fetchData() {
+    const year = document.getElementById('year-select').value;
+    const month = document.getElementById('month-select').value;
+    console.log(`Запрос данных за ${month}/${year}`);
+    closeModal('modal-calculation');
+}
+
+function fetchVacationData() {
+    const year = document.getElementById('vacation-year-select').value;
+    console.log(`Запрос данных отпусков за ${year}`);
+    closeModal('modal-vacation');
+}
+
+function confirmFamiliarization(documentId) {
+    console.log(`Документ с ID ${documentId} отмечен как ознакомленный.`);
+    fetch('/api/confirm-familiarization', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ documentId: documentId }),
+    })
+    .then(response => {
+        if (response.ok) {
+            alert('Документ успешно отмечен как ознакомленный.');
+            closeModal('modal-familiarization');
+        } else {
+            alert('Ошибка при отправке данных.');
+        }
+    })
+    .catch(error => {
+        console.error('Ошибка:', error);
+        alert('Ошибка при отправке данных.');
+    });
+}
+
+function confirmSignature(documentId) {
+    console.log(`Документ с ID ${documentId} подписан.`);
+    fetch('/api/confirm-signature', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ documentId: documentId }),
+    })
+    .then(response => {
+        if (response.ok) {
+            alert('Документ успешно подписан.');
+            closeModal('modal-signature');
+        } else {
+            alert('Ошибка при отправке данных.');
+        }
+    })
+    .catch(error => {
+        console.error('Ошибка:', error);
+        alert('Ошибка при отправке данных.');
+    });
+}
+
+function openTab(evt, tabName) {
+    const tabcontents = document.querySelectorAll('.tabcontent');
+    tabcontents.forEach(tabcontent => {
+        tabcontent.style.display = 'none';
+    });
+
+    const tablinks = document.querySelectorAll('.tablinks');
+    tablinks.forEach(tablink => {
+        tablink.classList.remove('active');
+    });
+
+    document.getElementById(tabName).style.display = 'block';
+    evt.currentTarget.classList.add('active');
+}
+</script>
+
+{% endblock %}

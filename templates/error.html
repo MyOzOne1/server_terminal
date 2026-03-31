@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Ошибка {{ error_code }}</title>
+    <style>
+        .error-container {
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 30px;
+            text-align: center;
+            border: 1px solid #ff4444;
+            border-radius: 5px;
+        }
+        .error-code {
+            font-size: 48px;
+            color: #ff4444;
+        }
+        .error-message {
+            font-size: 24px;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="error-container">
+        <div class="error-code">Ошибка {{ error_code }}</div>
+        <div class="error-message">{{ message }}</div>
+        <a href="{{ url_for('login') }}">Вернуться на главную</a>
+    </div>
+</body>
+</html>
